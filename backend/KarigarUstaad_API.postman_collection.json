@@ -1,0 +1,346 @@
+{
+  "info": {
+    "_postman_id": "c5d1c5d1-c5d1-c5d1-c5d1-c5d1c5d1c5d1",
+    "name": "KarigarUstaad API",
+    "description": "Complete REST API collection for KarigarUstaad Job Marketplace",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Carpenter\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"role\": \"worker\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/me",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "me"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs?category=Carpentry&search=paint&minBudget=100&maxBudget=500",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "Carpentry"
+                },
+                {
+                  "key": "search",
+                  "value": "paint"
+                },
+                {
+                  "key": "minBudget",
+                  "value": "100"
+                },
+                {
+                  "key": "maxBudget",
+                  "value": "500"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Job Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/{{JOB_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "{{JOB_ID}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Fix Kitchen Cabinet Door\",\n  \"description\": \"Need to fix a broken cabinet door in kitchen. Please bring your own tools.\",\n  \"budget\": 150,\n  \"location\": \"New York\",\n  \"category\": \"Carpentry\",\n  \"requiredSkills\": [\"Carpentry\", \"Woodwork\"]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs"]
+            }
+          }
+        },
+        {
+          "name": "Get My Jobs",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/my",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "my"]
+            }
+          }
+        },
+        {
+          "name": "Update Job",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated title\",\n  \"budget\": 200,\n  \"status\": \"closed\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/{{JOB_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "{{JOB_ID}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Job",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/{{JOB_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "{{JOB_ID}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Job Applicants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/jobs/{{JOB_ID}}/applicants",
+              "host": ["{{BASE_URL}}"],
+              "path": ["jobs", "{{JOB_ID}}", "applicants"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications",
+      "item": [
+        {
+          "name": "Apply to Job",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"coverLetter\": \"I have 10 years of experience in carpentry and would love to work on this project.\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/applications/{{JOB_ID}}/apply",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "{{JOB_ID}}", "apply"]
+            }
+          }
+        },
+        {
+          "name": "Get My Applications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/applications/my",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "my"]
+            }
+          }
+        },
+        {
+          "name": "Get Application Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/applications/{{APPLICATION_ID}}",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "{{APPLICATION_ID}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Application Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\",\n  \"rejectionReason\": \"\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/applications/{{APPLICATION_ID}}/status",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "{{APPLICATION_ID}}", "status"]
+            }
+          }
+        },
+        {
+          "name": "Withdraw Application",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/applications/{{APPLICATION_ID}}/withdraw",
+              "host": ["{{BASE_URL}}"],
+              "path": ["applications", "{{APPLICATION_ID}}", "withdraw"]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "TOKEN",
+      "value": ""
+    },
+    {
+      "key": "JOB_ID",
+      "value": ""
+    },
+    {
+      "key": "APPLICATION_ID",
+      "value": ""
+    }
+  ]
+}
