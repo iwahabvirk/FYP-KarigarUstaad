@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
@@ -25,13 +26,28 @@ export default function WorkerDashboardScreen() {
     router.push('/(worker)/profile');
   };
 
+  const handleViewEarnings = () => {
+    // Navigate to earnings screen or show earnings modal
+    Alert.alert('Earnings', 'Earnings feature coming soon!');
+  };
+
+  const handleViewReviews = () => {
+    // Navigate to reviews screen
+    Alert.alert('Reviews', 'Reviews feature coming soon!');
+  };
+
+  const handleContactSupport = () => {
+    // Navigate to support screen or open support chat
+    Alert.alert('Support', 'Contact support at support@karigarustaad.com');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Welcome, Rajesh! 👋</Text>
+            <Text style={styles.greeting}>Welcome, Hamza! 👋</Text>
             <Text style={styles.subtitle}>Service Provider</Text>
           </View>
           <TouchableOpacity
@@ -73,15 +89,15 @@ export default function WorkerDashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.quickActionsContainer}>
-          <TouchableOpacity style={styles.quickActionButton}>
+          <TouchableOpacity style={styles.quickActionButton} onPress={handleViewEarnings}>
             <Text style={styles.quickActionIcon}>📈</Text>
             <Text style={styles.quickActionText}>Earnings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionButton}>
+          <TouchableOpacity style={styles.quickActionButton} onPress={handleViewReviews}>
             <Text style={styles.quickActionIcon}>⭐</Text>
             <Text style={styles.quickActionText}>Reviews</Text>
           </TouchableOpacity>
-          <TouchableOpacity  style={styles.quickActionButton}>
+          <TouchableOpacity style={styles.quickActionButton} onPress={handleContactSupport}>
             <Text style={styles.quickActionIcon}>📞</Text>
             <Text style={styles.quickActionText}>Support</Text>
           </TouchableOpacity>

@@ -1,40 +1,47 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  SafeAreaView,
-  ScrollView,
-  TouchableOpacity,
-  FlatList,
-} from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
-import { Button } from '@/components/Button';
-import { dummyWorkers } from '@/src/data';
+import { getWorkersByCategory } from '@/src/data';
+import { Worker } from '@/src/types';
 
 export default function AIMatchScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const workerId = params.workerId as string;
-  const addressId = params.addressId as string;
+  const category = params.category as string || 'Painter';
+  const location = params.location as string || 'DHA Lahore';
 
-  const selectedWorker = dummyWorkers.find((w) => w.id === workerId);
-  const recommendations = dummyWorkers.slice(0, 3);
+  const [loading, setLoading] = useState(false);
+  
+  // Get workers in this category (sorted by rating)
+  const workers = useMemo(() => {
+    const categoryWorkers = getWorkersByCategory(category);
+    return categoryWorkers.sort((a, b) => b.rating - a.rating);
+  }, [category]);
 
-  const handleSelectWorker = () => {
+  const handleSelectWorker = (worker: Worker) => {
     router.push({
-      pathname: '/(customer)/booking-summary',
-      params: { workerId, addressId },
+      pathname: '/(customer)/service-details',
+      params: {
+        workerId: worker.id,
+      },
     });
   };
 
-  const renderRecommendation = ({ item }: { item: (typeof dummyWorkers)[0] }) => (
-    <Card style={styles.recommendationCard}>
-      <View style={styles.recommendationContent}>
-        <View style={styles.recommendationHeader}>
-          <View style={styles.avatar}>
+  const renderWorker = ({ item, index }: { item: Worker; index: number }) => {
+    const isTop = index === 0;
+    const badges = [];
+    if (item.rating >= 4.5) badges.push('Top Rated');
+    badges.push(item.distance);
+    if (item.reviews > 50) badges.push('Highly Reviewed');
+
+    return (
+      <Card style={styles.workerCard}>
+        {isTop && <View style={styles.bestMatchBadge}><Text style={styles.bestMatchText}>🌟 Best Match</Text></View>}
+        
+        <View style={styles.workerProfile}>
+          <View style={styles.workerAvatar}>
             <Text style={styles.avatarText}>
               {item.name
                 .split(' ')
@@ -42,103 +49,68 @@ export default function AIMatchScreen() {
                 .join('')}
             </Text>
           </View>
-          <View style={styles.recommendationInfo}>
-            <Text style={styles.recommendationName}>{item.name}</Text>
-            <Text style={styles.recommendationCategory}>{item.category}</Text>
-          </View>
-          {item.id === workerId && (
-            <View style={styles.selectedBadge}>
-              <Text style={styles.selectedBadgeText}>✓ Selected</Text>
+          <View style={styles.workerInfo}>
+            <Text style={styles.workerName}>{item.name}</Text>
+            <Text style={styles.workerCategory}>{item.category}</Text>
+            <View style={styles.ratingContainer}>
+              <Text style={styles.rating}>⭐ {item.rating.toFixed(1)}</Text>
+              <Text style={styles.reviews}>({item.reviews} reviews)</Text>
             </View>
-          )}
-        </View>
-        <View style={styles.recommendationFooter}>
-          <View style={styles.ratingBadge}>
-            <Text style={styles.rating}>⭐ {item.rating}</Text>
           </View>
-          <Text style={styles.price}>Rs. {item.price}</Text>
         </View>
-      </View>
-    </Card>
-  );
+
+        <View style={styles.badgesContainer}>
+          {badges.map((badge, idx) => (
+            <View key={idx} style={styles.badge}>
+              <Text style={styles.badgeText}>{badge}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.priceRow}>
+          <Text style={styles.priceLabel}>Rs. {item.price}/hour</Text>
+          <TouchableOpacity 
+            style={styles.selectButton}
+            onPress={() => handleSelectWorker(item)}
+          >
+            <Text style={styles.selectButtonText}>Select →</Text>
+          </TouchableOpacity>
+        </View>
+      </Card>
+    );
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Finding the best workers for you...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <Text style={styles.title}>Recommended Workers</Text>
         <TouchableOpacity onPress={() => router.back()}>
-          <Text style={styles.backButton}>← Back</Text>
+          <Text style={styles.backButton}>✕</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>AI Recommendations</Text>
-        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        <Card style={styles.aiCard}>
-          <View style={styles.aiHeader}>
-            <Text style={styles.aiIcon}>🤖</Text>
-            <Text style={styles.aiTitle}>Smart Matching</Text>
-          </View>
-          <Text style={styles.aiDescription}>
-            We've analyzed worker ratings, availability, and expertise to find the best match for you.
-          </Text>
-        </Card>
-
-        {selectedWorker && (
-          <Card style={styles.selectedWorkerCard}>
-            <View style={styles.selectedWorkerBadge}>
-              <Text style={styles.bestMatchText}>✨ Best Match</Text>
-            </View>
-            <View style={styles.selectedWorkerContent}>
-              <View style={styles.largeAvatar}>
-                <Text style={styles.avatarTextLarge}>
-                  {selectedWorker.name
-                    .split(' ')
-                    .map((n) => n[0])
-                    .join('')}
-                </Text>
-              </View>
-              <View style={styles.selectedWorkerInfo}>
-                <Text style={styles.selectedWorkerName}>{selectedWorker.name}</Text>
-                <Text style={styles.selectedWorkerCategory}>
-                  {selectedWorker.category}
-                </Text>
-                <View style={styles.selectedWorkerStats}>
-                  <Text style={styles.selectedWorkerRating}>
-                    ⭐ {selectedWorker.rating} ({selectedWorker.reviews} reviews)
-                  </Text>
-                  <Text style={styles.selectedWorkerDistance}>
-                    📍 {selectedWorker.distance}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <Text style={styles.matchReasonTitle}>Why this worker?</Text>
-            <Text style={styles.matchReason}>
-              ✓ Highest rated in your area{'\n'}
-              ✓ {selectedWorker.reviews}+ verified reviews{'\n'}
-              ✓ Average response time: 5 mins
-            </Text>
-          </Card>
-        )}
-
-        <View style={styles.alternativesContainer}>
-          <Text style={styles.alternativesTitle}>Other Options</Text>
-          <FlatList
-            data={recommendations.filter((w) => w.id !== workerId)}
-            keyExtractor={(item) => item.id}
-            renderItem={renderRecommendation}
-            scrollEnabled={false}
-          />
-        </View>
-      </ScrollView>
-
-      <View style={styles.footer}>
-        <Button
-          label="Proceed with Booking"
-          onPress={handleSelectWorker}
-          size="large"
-        />
+      <View style={styles.subtitleContainer}>
+        <Text style={styles.subtitle}>AI found the best workers near you</Text>
       </View>
+
+      <FlatList
+        data={workers}
+        keyExtractor={(item) => item.id}
+        renderItem={renderWorker}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+      />
     </SafeAreaView>
   );
 }
@@ -157,191 +129,146 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.grayLight,
   },
-  backButton: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.primary,
-  },
   title: {
-    fontSize: 18,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.text,
-    flex: 1,
-    textAlign: 'center',
   },
-  content: {
+  backButton: {
+    fontSize: 24,
+    color: colors.text,
+  },
+  subtitleContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    backgroundColor: '#F0F7FF',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  loadingContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  listContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
   },
-  aiCard: {
-    marginBottom: 20,
-    backgroundColor: '#F3E5F5',
-  },
-  aiHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  aiIcon: {
-    fontSize: 24,
-    marginRight: 8,
-  },
-  aiTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  aiDescription: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
-  selectedWorkerCard: {
-    marginBottom: 24,
-    backgroundColor: '#E8F5E9',
-    borderWidth: 2,
-    borderColor: colors.success,
-  },
-  selectedWorkerBadge: {
+  workerCard: {
     marginBottom: 16,
+  },
+  bestMatchBadge: {
+    position: 'absolute',
+    top: -8,
+    right: 16,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    zIndex: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 5,
   },
   bestMatchText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.success,
-  },
-  selectedWorkerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  largeAvatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  avatarTextLarge: {
-    fontSize: 28,
-    fontWeight: '700',
     color: colors.white,
-  },
-  selectedWorkerInfo: {
-    flex: 1,
-  },
-  selectedWorkerName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  selectedWorkerCategory: {
     fontSize: 13,
-    color: colors.textSecondary,
-    marginBottom: 4,
-  },
-  selectedWorkerStats: {
-    gap: 4,
-  },
-  selectedWorkerRating: {
-    fontSize: 12,
-    color: colors.text,
-  },
-  selectedWorkerDistance: {
-    fontSize: 12,
-    color: colors.text,
-  },
-  matchReasonTitle: {
-    fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
-    marginBottom: 8,
   },
-  matchReason: {
-    fontSize: 12,
-    color: colors.text,
-    lineHeight: 18,
-  },
-  alternativesContainer: {
-    marginBottom: 40,
-  },
-  alternativesTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  recommendationCard: {
-    marginBottom: 12,
-  },
-  recommendationContent: {
-    flex: 1,
-  },
-  recommendationHeader: {
+  workerProfile: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: colors.secondary,
+  workerAvatar: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   avatarText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: colors.white,
   },
-  recommendationInfo: {
+  workerInfo: {
     flex: 1,
   },
-  recommendationName: {
-    fontSize: 14,
-    fontWeight: '600',
+  workerName: {
+    fontSize: 16,
+    fontWeight: '700',
     color: colors.text,
+    marginBottom: 2,
   },
-  recommendationCategory: {
-    fontSize: 12,
+  workerCategory: {
+    fontSize: 13,
     color: colors.textSecondary,
+    marginBottom: 4,
   },
-  selectedBadge: {
-    backgroundColor: colors.success,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  selectedBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  recommendationFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ratingBadge: {
+  ratingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   rating: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
+    marginRight: 4,
+  },
+  reviews: {
     fontSize: 12,
+    color: colors.textSecondary,
+  },
+  badgesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 12,
+  },
+  badge: {
+    backgroundColor: '#E3F2FD',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  badgeText: {
+    fontSize: 11,
+    color: colors.primary,
     fontWeight: '600',
   },
-  price: {
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  priceLabel: {
     fontSize: 14,
     fontWeight: '700',
     color: colors.primary,
   },
-  footer: {
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+  selectButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  selectButtonText: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

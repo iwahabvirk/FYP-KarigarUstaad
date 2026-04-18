@@ -9,25 +9,28 @@ import {
   Alert,
   Animated,
   TextInput,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getJobById } from '@/src/data';
+import { getJobById, completeJob } from '@/src/services/jobService';
 
 export default function InProgressScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const jobId = params.jobId as string;
-  const job = getJobById(jobId);
-
+  const [job, setJob] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [completing, setCompleting] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
   const [notes, setNotes] = useState('');
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    loadJob();
     const interval = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
@@ -51,6 +54,39 @@ export default function InProgressScreen() {
     ).start();
   }, [pulseAnim]);
 
+  const loadJob = async () => {
+    try {
+      const jobData = await getJobById(jobId);
+      setJob(jobData);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to load job details');
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCompleteJob = async () => {
+    if (!notes.trim()) {
+      Alert.alert('Notes Required', 'Please add work notes before completing the job.');
+      return;
+    }
+
+    setCompleting(true);
+    try {
+      await completeJob(jobId, notes.trim());
+      setIsCompleted(true);
+      // Auto navigate after 2 seconds
+      setTimeout(() => {
+        router.replace('/(worker)/dashboard');
+      }, 2000);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Failed to complete job');
+    } finally {
+      setCompleting(false);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -60,26 +96,16 @@ export default function InProgressScreen() {
       .padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleCompleteJob = () => {
-    if (!notes.trim()) {
-      Alert.alert('Notes Required', 'Please add work notes before completing the job.');
-      return;
-    }
-
-    Alert.alert(
-      'Job Complete!',
-      `You completed "${job?.title}" in ${formatTime(elapsedSeconds)}. You've earned Rs. ${job?.budget}.`,
-      [
-        {
-          text: 'View Earnings',
-          onPress: () => {
-            router.replace('/(worker)/dashboard');
-          },
-        },
-      ],
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading job details...</Text>
+        </View>
+      </SafeAreaView>
     );
-    setIsCompleted(true);
-  };
+  }
 
   if (!job) {
     return (
@@ -94,15 +120,12 @@ export default function InProgressScreen() {
       <SafeAreaView style={styles.container}>
         <View style={styles.completionContainer}>
           <Text style={styles.completionIcon}>✅</Text>
-          <Text style={styles.completionTitle}>Job Completed!</Text>
-          <Text style={styles.completionSubtitle}>Great work! Check your earnings dashboard.</Text>
-          <Button
-            label="Back to Dashboard"
-            onPress={() => router.replace('/(worker)/dashboard')}
-            variant="primary"
-            size="large"
-            style={styles.completionButton}
-          />
+          <Text style={styles.completionTitle}>Job Completed Successfully!</Text>
+          <Text style={styles.completionSubtitle}>
+            Great work! Your earnings will be added to your wallet.
+          </Text>
+          <ActivityIndicator size="small" color={colors.primary} style={styles.completionSpinner} />
+          <Text style={styles.completionNote}>Redirecting to dashboard...</Text>
         </View>
       </SafeAreaView>
     );
@@ -217,10 +240,11 @@ export default function InProgressScreen() {
 
       <View style={styles.footer}>
         <Button
-          label="Mark as Complete"
+          label={completing ? "Completing..." : "Mark as Complete"}
           onPress={handleCompleteJob}
           variant="primary"
           size="large"
+          disabled={completing}
         />
       </View>
     </SafeAreaView>
@@ -231,6 +255,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.textSecondary,
+  },
+  errorText: {
+    fontSize: 18,
+    color: colors.error,
+    textAlign: 'center',
+    marginTop: 50,
   },
   header: {
     paddingHorizontal: 20,
@@ -440,13 +480,15 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     textAlign: 'center',
   },
+  completionSpinner: {
+    marginBottom: 16,
+  },
+  completionNote: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
   completionButton: {
     width: '100%',
-  },
-  errorText: {
-    fontSize: 16,
-    color: colors.text,
-    textAlign: 'center',
-    marginTop: 40,
   },
 });

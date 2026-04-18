@@ -14,8 +14,8 @@ const registerWorker = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: 'John Carpenter',
-        email: 'john@example.com',
+        name: 'Ali Raza',
+        email: 'ali.raza@example.com',
         password: 'password123',
         role: 'worker',
       }),
@@ -62,7 +62,7 @@ const loginUser = async () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        email: 'john@example.com',
+        email: 'ali.raza@example.com',
         password: 'password123',
       }),
     });

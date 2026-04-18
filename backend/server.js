@@ -7,7 +7,6 @@ const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationRoutes');
-const userRoutes = require('./routes/userRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const walletRoutes = require('./routes/walletRoutes');
@@ -42,7 +41,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
-app.use('/api/users', userRoutes);
+app.use('/api/workers', workerRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wallet', walletRoutes);

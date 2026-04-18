@@ -19,18 +19,38 @@ export default function AddressSelectorScreen() {
   const params = useLocalSearchParams();
   const workerId = params.workerId as string;
   const workerName = params.workerName as string;
-  const [selectedAddressId, setSelectedAddressId] = useState(dummyAddresses[0].id);
+  const category = params.category as string;
+  const [selectedAddressId, setSelectedAddressId] = useState<string>(dummyAddresses[0]?.id || '');
+  const [selectedAddress, setSelectedAddress] = useState(dummyAddresses[0] || null);
 
   const handleSelectAddress = () => {
-    if (!selectedAddressId) {
-      Alert.alert('Please select an address');
+    if (!selectedAddressId || !selectedAddress) {
+      Alert.alert('Error', 'Please select an address');
       return;
     }
 
     router.push({
-      pathname: '/(customer)/ai-match',
-      params: { workerId, workerName, addressId: selectedAddressId },
+      pathname: '/(customer)/booking-summary',
+      params: {
+        workerId,
+        workerName,
+        category,
+        addressId: selectedAddressId,
+        address: selectedAddress.address,
+        label: selectedAddress.label,
+      },
     });
+  };
+
+  const handleAddNewAddress = () => {
+    Alert.alert(
+      'Add Address',
+      'This feature will allow you to add a new delivery address.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'OK', onPress: () => {} }
+      ]
+    );
   };
 
   const renderAddressCard = ({ item }: { item: (typeof dummyAddresses)[0] }) => (
@@ -39,7 +59,10 @@ export default function AddressSelectorScreen() {
         styles.addressCard,
         selectedAddressId === item.id && styles.selectedAddressCard,
       ]}
-      onPress={() => setSelectedAddressId(item.id)}
+      onPress={() => {
+        setSelectedAddressId(item.id);
+        setSelectedAddress(item);
+      }}
     >
       <Card style={{ marginBottom: 0 }}>
         <View style={styles.cardContent}>
@@ -89,7 +112,10 @@ export default function AddressSelectorScreen() {
       />
 
       <Card style={styles.addNewCard}>
-        <TouchableOpacity style={styles.addNewButton}>
+        <TouchableOpacity 
+          style={styles.addNewButton}
+          onPress={handleAddNewAddress}
+        >
           <Text style={styles.addNewIcon}>➕</Text>
           <Text style={styles.addNewText}>Add New Address</Text>
         </TouchableOpacity>

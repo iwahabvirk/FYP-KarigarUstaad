@@ -108,8 +108,8 @@ MongoDB Connected: localhost
 curl -X POST http://localhost:5000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "John Carpenter",
-    "email": "john@example.com",
+    "name": "Ali Raza",
+    "email": "ali.raza@example.com",
     "password": "password123",
     "role": "worker"
   }'
@@ -123,8 +123,8 @@ Response:
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "507f1f77bcf86cd799439011",
-    "name": "John Carpenter",
-    "email": "john@example.com",
+    "name": "Ali Raza",
+    "email": "ali.raza@example.com",
     "role": "worker"
   }
 }

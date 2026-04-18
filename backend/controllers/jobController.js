@@ -7,20 +7,35 @@ exports.createJob = async (req, res) => {
   try {
     const { title, description, budget, location, category, requiredSkills } = req.body;
 
-    if (!title || !description || !budget) {
+    if (!title || !description || !budget || !location || !category) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide title, description, and budget',
+        message: 'Please provide title, description, category, budget, and location',
+      });
+    }
+
+    if (!['employer', 'customer'].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Only customers or employers can post jobs',
+      });
+    }
+
+    const parsedBudget = Number(budget);
+    if (Number.isNaN(parsedBudget) || parsedBudget <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Budget must be a valid number greater than 0',
       });
     }
 
     const job = await Job.create({
-      title,
-      description,
-      budget,
-      location: location || '',
-      category: category || 'Other',
-      requiredSkills: requiredSkills || [],
+      title: title.trim(),
+      description: description.trim(),
+      budget: parsedBudget,
+      location: location.trim(),
+      category: category.trim(),
+      requiredSkills: requiredSkills || [category.trim()],
       employer: req.user.id,
     });
 
@@ -274,6 +289,64 @@ exports.updateJobStatus = async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Job status updated successfully',
+      data: job,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Complete Job (Worker only)
+exports.completeJob = async (req, res) => {
+  try {
+    const { notes } = req.body;
+
+    const job = await Job.findById(req.params.id);
+
+    if (!job) {
+      return res.status(404).json({
+        success: false,
+        message: 'Job not found',
+      });
+    }
+
+    // Check if worker is assigned to this job
+    const application = await Application.findOne({
+      job: req.params.id,
+      worker: req.user.id,
+      status: 'accepted',
+    });
+
+    if (!application) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to complete this job',
+      });
+    }
+
+    if (job.status !== 'in_progress') {
+      return res.status(400).json({
+        success: false,
+        message: 'Job must be in progress to complete',
+      });
+    }
+
+    // Update job status
+    job.status = 'completed';
+    if (notes) job.notes = notes;
+    await job.save();
+
+    // Add earnings to worker's wallet
+    await User.findByIdAndUpdate(req.user.id, {
+      $inc: { 'wallet.pending': job.budget },
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Job completed successfully',
       data: job,
     });
   } catch (error) {

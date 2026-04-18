@@ -29,10 +29,14 @@ export default function ServiceDetailsScreen() {
   }
 
   const handleHireWorker = () => {
-    Alert.alert('Booking Confirmed', `You selected ${worker.name}. Proceeding to address selection.`);
+    Alert.alert('Proceeding', `Moving to booking checkout...`);
     router.push({
       pathname: '/(customer)/address-selector',
-      params: { workerId: worker.id, workerName: worker.name },
+      params: { 
+        workerName: worker.name,
+        workerId: worker.id,
+        category: worker.category 
+      },
     });
   };
 

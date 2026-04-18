@@ -20,11 +20,13 @@ const jobSchema = new mongoose.Schema(
     },
     location: {
       type: String,
-      default: '',
+      trim: true,
+      required: [true, 'Please provide a location'],
     },
     category: {
       type: String,
-      enum: ['Carpentry', 'Painting', 'Electrical', 'Plumbing', 'Tiling', 'Installation', 'Other'],
+      enum: ['Electrician', 'Plumber', 'Painter', 'AC Technician', 'Carpenter', 'Carpentry', 'Tiling', 'Installation', 'Other'],
+      required: [true, 'Please provide a category'],
       default: 'Other',
     },
     employer: {

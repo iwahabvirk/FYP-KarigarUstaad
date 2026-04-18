@@ -34,6 +34,10 @@ export default function CustomerHomeScreen() {
     });
   };
 
+  const handleProfilePress = () => {
+    router.push('/(customer)/profile');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false}>
@@ -43,7 +47,7 @@ export default function CustomerHomeScreen() {
             <Text style={styles.greeting}>Hi, Rahul! 👋</Text>
             <Text style={styles.location}>📍 DHA Lahore, Lahore</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton}>
+          <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
             <Text style={styles.profileIcon}>👤</Text>
           </TouchableOpacity>
         </View>
@@ -73,6 +77,10 @@ export default function CustomerHomeScreen() {
           <TouchableOpacity style={styles.quickButton}>
             <Text style={styles.quickButtonIcon}>🚀</Text>
             <Text style={styles.quickButtonText}>Urgent</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickButton} onPress={() => router.push('/(customer)/post-job')}>
+            <Text style={styles.quickButtonIcon}>➕</Text>
+            <Text style={styles.quickButtonText}>Post Job</Text>
           </TouchableOpacity>
         </View>
 

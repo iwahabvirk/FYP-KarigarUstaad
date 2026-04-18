@@ -8,6 +8,7 @@ const {
   deleteJob,
   getJobApplicants,
   updateJobStatus,
+  completeJob,
 } = require('../controllers/jobController');
 const { applyJob } = require('../controllers/applicationController');
 const { payForJob } = require('../controllers/walletController');
@@ -21,9 +22,10 @@ router.get('/:id', getJobById);
 
 // Worker routes
 router.post('/:id/apply', protect, authorizeRoles('worker'), applyJob);
+router.put('/:id/complete', protect, authorizeRoles('worker'), completeJob);
 
-// Protected routes - Employer only
-router.post('/', protect, authorizeRoles('employer'), createJob);
+// Protected routes - Employer or Customer
+router.post('/', protect, authorizeRoles('employer', 'customer'), createJob);
 router.get('/my', protect, authorizeRoles('employer'), getMyJobs);
 router.patch('/:id', protect, authorizeRoles('employer'), updateJob);
 router.put('/:id/status', protect, authorizeRoles('employer'), updateJobStatus);

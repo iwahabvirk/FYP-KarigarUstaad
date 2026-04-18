@@ -273,8 +273,8 @@ http://localhost:5000/api
 ```bash
 POST /api/auth/register
 {
-  "name": "John Carpenter",
-  "email": "john@example.com",
+  "name": "Ali Raza",
+  "email": "ali.raza@example.com",
   "password": "password123",
   "role": "worker"
 }

@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['worker', 'employer'],
+      enum: ['worker', 'employer', 'customer'],
       required: [true, 'Please select a role'],
     },
     skills: [
@@ -40,14 +40,8 @@ const userSchema = new mongoose.Schema(
       default: '',
     },
     location: {
-      lat: {
-        type: Number,
-        default: null,
-      },
-      lng: {
-        type: Number,
-        default: null,
-      },
+      type: String,
+      default: '',
     },
     rating: {
       type: Number,
@@ -76,6 +70,65 @@ const userSchema = new mongoose.Schema(
     profileImage: {
       type: String,
       default: null,
+    },
+    phone: {
+      type: String,
+      default: '',
+    },
+    bio: {
+      type: String,
+      default: '',
+    },
+    skills: [
+      {
+        type: String,
+      },
+    ],
+    experience: {
+      type: String,
+      default: '',
+    },
+    location: {
+      type: String,
+      default: '',
+    },
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+    },
+    // Worker specific fields
+    completedJobs: {
+      type: Number,
+      default: 0,
+    },
+    responseTime: {
+      type: String,
+      default: '24 hours',
+    },
+    availability: {
+      type: Boolean,
+      default: true,
+    },
+    wallet: {
+      balance: {
+        type: Number,
+        default: 0,
+      },
+      pending: {
+        type: Number,
+        default: 0,
+      },
+    },
+    // Customer specific fields
+    totalJobsPosted: {
+      type: Number,
+      default: 0,
     },
   },
   {

@@ -29,6 +29,7 @@ export default function RootLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen name="edit-profile" />
     </Stack>
   );
 }

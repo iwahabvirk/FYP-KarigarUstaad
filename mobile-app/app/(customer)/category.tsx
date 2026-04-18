@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,29 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
+import { Button } from '@/components/Button';
 import { getWorkersByCategory } from '@/src/data';
 
 export default function CategoryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const category = params.category as string;
+  const [userLocation] = React.useState('DHA Lahore'); // Get from user profile in real app
+
+  // Navigate to AI recommendations for this category
+  const handleNavigateToAI = () => {
+    router.push({
+      pathname: '/(customer)/ai-match',
+      params: { category, location: userLocation },
+    });
+  };
+
+  // Alternative: Manual worker browsing
   const workers = useMemo(() => getWorkersByCategory(category), [category]);
 
   const handleWorkerSelect = (workerId: string) => {
@@ -68,8 +81,31 @@ export default function CategoryScreen() {
         <Text style={styles.filterIcon}>☰</Text>
       </View>
 
-      <View style={styles.statsContainer}>
-        <Text style={styles.statsText}>{workers.length} workers available</Text>
+      {/* AI Recommendation Banner */}
+      <Card style={styles.aiBanner}>
+        <View style={styles.aiBannerContent}>
+          <View style={styles.aiIconContainer}>
+            <Text style={styles.aiIcon}>🤖</Text>
+          </View>
+          <View style={styles.aiBannerText}>
+            <Text style={styles.aiBannerTitle}>Get AI Recommendations</Text>
+            <Text style={styles.aiBannerSubtitle}>Find the best workers for your needs</Text>
+          </View>
+        </View>
+        <Button
+          label="View Recommended"
+          onPress={handleNavigateToAI}
+          size="small"
+          style={styles.aiButton}
+        />
+      </Card>
+
+      <View style={styles.divider} />
+
+      {/* Manual Browse Section */}
+      <View style={styles.browseHeaderContainer}>
+        <Text style={styles.browseTitle}>Browse All Workers</Text>
+        <Text style={styles.statsText}>{workers.length} available</Text>
       </View>
 
       <FlatList
@@ -178,5 +214,63 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: colors.primary,
+  },
+  aiBanner: {
+    marginHorizontal: 20,
+    marginVertical: 16,
+    backgroundColor: '#F0F7FF',
+    borderLeftWidth: 4,
+    borderLeftColor: colors.primary,
+  },
+  aiBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  aiIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  aiIcon: {
+    fontSize: 28,
+  },
+  aiBannerText: {
+    flex: 1,
+  },
+  aiBannerTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 2,
+  },
+  aiBannerSubtitle: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  aiButton: {
+    marginTop: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.grayLight,
+    marginVertical: 8,
+  },
+  browseHeaderContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    backgroundColor: colors.white,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  browseTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
   },
 });

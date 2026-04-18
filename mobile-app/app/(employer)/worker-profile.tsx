@@ -138,7 +138,7 @@ export default function EmployerWorkerProfileScreen() {
             {worker.reviews.map((review, index) => (
               <View key={index} style={styles.reviewItem}>
                 <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewAuthor}>{review.employer.name}</Text>
+                  <Text style={styles.reviewAuthor}>{review.customer.name}</Text>
                   <Text style={styles.reviewRating}>
                     {'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}
                   </Text>

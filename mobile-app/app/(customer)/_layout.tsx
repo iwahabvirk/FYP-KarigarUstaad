@@ -16,6 +16,9 @@ export default function CustomerLayout() {
       <Stack.Screen name="payment" />
       <Stack.Screen name="live-tracking" />
       <Stack.Screen name="rate-worker" />
+      <Stack.Screen name="post-job" />
+      <Stack.Screen name="profile" />
+      <Stack.Screen name="edit-profile" />
     </Stack>
   );
 }

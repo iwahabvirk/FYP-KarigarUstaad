@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
@@ -18,6 +19,7 @@ export default function BookingSummaryScreen() {
   const params = useLocalSearchParams();
   const workerId = params.workerId as string;
   const addressId = params.addressId as string;
+  const [confirming, setConfirming] = useState(false);
 
   const worker = getWorkerById(workerId);
   const address = dummyAddresses.find((a) => a.id === addressId);
@@ -26,11 +28,19 @@ export default function BookingSummaryScreen() {
   const gst = Math.round((serviceFee + platformFee) * 0.18);
   const total = serviceFee + platformFee + gst;
 
-  const handleConfirmBooking = () => {
-    router.push({
-      pathname: '/(customer)/payment',
-      params: { workerId, addressId, totalAmount: total.toString() },
-    });
+  const handleConfirmBooking = async () => {
+    setConfirming(true);
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      router.push({
+        pathname: '/(customer)/payment',
+        params: { workerId, addressId, totalAmount: total.toString() },
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to proceed. Please try again.');
+    } finally {
+      setConfirming(false);
+    }
   };
 
   return (
@@ -130,9 +140,10 @@ export default function BookingSummaryScreen() {
 
       <View style={styles.footer}>
         <Button
-          label="Proceed to Payment"
+          label={confirming ? 'Processing...' : 'Proceed to Payment'}
           onPress={handleConfirmBooking}
           size="large"
+          disabled={confirming}
         />
       </View>
     </SafeAreaView>

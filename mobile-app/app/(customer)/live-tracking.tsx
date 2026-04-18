@@ -16,7 +16,10 @@ import { Button } from '@/components/Button';
 export default function LiveTrackingScreen() {
   const router = useRouter();
   const [status, setStatus] = useState('Worker is on the way');
+  const [jobCompleted, setJobCompleted] = useState(false);
+  const [marking, setMarking] = useState(false);
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
+  const completeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -43,8 +46,35 @@ export default function LiveTrackingScreen() {
     ).start();
   }, [scaleAnim]);
 
-  const handleComplete = () => {
-    Alert.alert('Service Started', 'Timer started for the service');
+  const handleComplete = async () => {
+    setMarking(true);
+    try {
+      // Simulate marking as completed
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      // Show success animation
+      setJobCompleted(true);
+      Animated.timing(completeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }).start();
+
+      Alert.alert(
+        '✓ Job Completed',
+        'Great! Service has been marked as completed. Please rate the worker.',
+        [
+          {
+            text: 'Rate Worker',
+            onPress: () => router.push('/(customer)/rate-worker'),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Unable to mark as completed. Please try again.');
+    } finally {
+      setMarking(false);
+    }
   };
 
   const handleRateWorker = () => {
@@ -84,7 +114,7 @@ export default function LiveTrackingScreen() {
           <Text style={styles.sectionTitle}>Worker Details</Text>
           <View style={styles.workerDetailRow}>
             <Text style={styles.workerDetailLabel}>Name</Text>
-            <Text style={styles.workerDetailValue}>Rajesh Kumar</Text>
+            <Text style={styles.workerDetailValue}>Ahmed Khan</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.workerDetailRow}>
@@ -115,19 +145,41 @@ export default function LiveTrackingScreen() {
         </Card>
 
         <View style={styles.buttonContainer}>
-          <Button
-            label="Mark as Arrived"
-            onPress={handleComplete}
-            size="large"
-          />
-          {status === 'Worker has arrived!' && (
+          {!jobCompleted ? (
             <Button
-              label="Rate & Complete"
-              onPress={handleRateWorker}
-              variant="secondary"
+              label={marking ? 'Processing...' : 'Mark as Arrived'}
+              onPress={handleComplete}
               size="large"
-              style={styles.secondaryButton}
+              disabled={marking}
             />
+          ) : (
+            <View style={styles.successContainer}>
+              <Animated.View
+                style={[
+                  styles.successCheckmark,
+                  {
+                    opacity: completeAnim,
+                    transform: [
+                      {
+                        scale: completeAnim.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [0, 1],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Text style={styles.successIcon}>✓</Text>
+              </Animated.View>
+              <Text style={styles.successText}>Job Completed!</Text>
+              <Button
+                label="Rate Worker"
+                onPress={handleRateWorker}
+                size="large"
+                style={styles.rateButton}
+              />
+            </View>
           )}
         </View>
       </View>
@@ -256,7 +308,31 @@ const styles = StyleSheet.create({
   buttonContainer: {
     gap: 12,
   },
-  secondaryButton: {
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+  successCheckmark: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.success,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  successIcon: {
+    fontSize: 48,
+    color: colors.white,
+    fontWeight: '700',
+  },
+  successText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.success,
+    marginBottom: 16,
+  },
+  rateButton: {
     marginBottom: 0,
   },
 });

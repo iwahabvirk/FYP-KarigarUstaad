@@ -56,3 +56,14 @@ export const updateJobStatus = async (
   );
   return response.data;
 };
+
+export const completeJob = async (
+  jobId: string,
+  notes?: string,
+): Promise<{ success: boolean; message: string; data: JobItem }> => {
+  const response = await api.put<{ success: boolean; message: string; data: JobItem }>(
+    `/jobs/${jobId}/complete`,
+    { notes },
+  );
+  return response.data;
+};

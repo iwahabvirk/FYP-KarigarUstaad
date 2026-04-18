@@ -305,15 +305,15 @@ Example:
 ```javascript
 // WRONG
 {
-  "name": "John",
-  "email": "john@example.com"
+  "name": "Ali",
+  "email": "ali.raza@example.com"
   // Missing "password" and "role"
 }
 
 // CORRECT
 {
-  "name": "John",
-  "email": "john@example.com",
+  "name": "Ali",
+  "email": "ali.raza@example.com",
   "password": "password123",
   "role": "worker"
 }

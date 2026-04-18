@@ -63,8 +63,8 @@ POST /api/auth/register
 Content-Type: application/json
 
 {
-  "name": "John Doe",
-  "email": "john@example.com",
+  "name": "Ali Raza",
+  "email": "ali.raza@example.com",
   "password": "password123",
   "role": "worker"
 }
@@ -76,7 +76,7 @@ POST /api/auth/login
 Content-Type: application/json
 
 {
-  "email": "john@example.com",
+  "email": "ali.raza@example.com",
   "password": "password123"
 }
 ```

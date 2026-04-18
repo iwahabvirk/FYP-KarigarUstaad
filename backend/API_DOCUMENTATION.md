@@ -53,8 +53,8 @@ POST /auth/register
 Content-Type: application/json
 
 {
-  "name": "John Carpenter",
-  "email": "john@example.com",
+  "name": "Ali Raza",
+  "email": "ali.raza@example.com",
   "password": "password123",
   "role": "worker"
 }
@@ -76,8 +76,8 @@ Content-Type: application/json
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "507f1f77bcf86cd799439011",
-    "name": "John Carpenter",
-    "email": "john@example.com",
+    "name": "Ali Raza",
+    "email": "ali.raza@example.com",
     "role": "worker"
   }
 }
@@ -103,7 +103,7 @@ POST /auth/login
 Content-Type: application/json
 
 {
-  "email": "john@example.com",
+  "email": "ali.raza@example.com",
   "password": "password123"
 }
 ```
@@ -122,8 +122,8 @@ Content-Type: application/json
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "user": {
     "id": "507f1f77bcf86cd799439011",
-    "name": "John Carpenter",
-    "email": "john@example.com",
+    "name": "Ali Raza",
+    "email": "ali.raza@example.com",
     "role": "worker"
   }
 }
@@ -155,8 +155,8 @@ Authorization: Bearer <token>
   "success": true,
   "user": {
     "_id": "507f1f77bcf86cd799439011",
-    "name": "John Carpenter",
-    "email": "john@example.com",
+    "name": "Ali Raza",
+    "email": "ali.raza@example.com",
     "role": "worker",
     "skills": ["Carpentry", "Woodwork"],
     "experience": "10 years",
@@ -432,8 +432,8 @@ Authorization: Bearer <token>
       "job": "507f1f77bcf86cd799439010",
       "worker": {
         "_id": "507f1f77bcf86cd799439009",
-        "name": "John Carpenter",
-        "email": "john@example.com",
+        "name": "Ali Raza",
+        "email": "ali.raza@example.com",
         "rating": 4.8,
         "skills": ["Carpentry", "Woodwork"]
       },
@@ -553,8 +553,8 @@ Authorization: Bearer <token>
     "job": { ... },
     "worker": {
       "_id": "507f1f77bcf86cd799439009",
-      "name": "John Carpenter",
-      "email": "john@example.com",
+      "name": "Ali Raza",
+      "email": "ali.raza@example.com",
       "skills": ["Carpentry", "Woodwork"],
       "rating": 4.8
     },
@@ -671,8 +671,8 @@ Currently, there is no rate limiting. In production, implement rate limiting to 
 // 1. Register Worker
 POST /auth/register
 {
-  "name": "John Carpenter",
-  "email": "john@example.com",
+  "name": "Ali Raza",
+  "email": "ali.raza@example.com",
   "password": "password123",
   "role": "worker"
 }
