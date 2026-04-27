@@ -12,6 +12,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { updateJobStatus } from '@/src/services/jobService';
 
 type PaymentMethod = 'cash' | 'card';
 
@@ -19,6 +20,8 @@ export default function PaymentScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const totalAmount = params.totalAmount as string;
+  const jobId = params.jobId as string | undefined;
+  const workerId = params.workerId as string | undefined;
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('card');
   const [processing, setProcessing] = useState(false);
 
@@ -26,8 +29,19 @@ export default function PaymentScreen() {
     setProcessing(true);
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      if (jobId) {
+        await updateJobStatus(jobId, 'in_progress');
+      }
+
       Alert.alert('Payment Successful', 'Your booking has been confirmed!');
-      router.replace('/(customer)/live-tracking');
+      router.replace({
+        pathname: '/(customer)/live-tracking',
+        params: {
+          jobId,
+          workerId,
+        },
+      });
     } catch (error) {
       Alert.alert('Payment Failed', 'Please try again');
     } finally {

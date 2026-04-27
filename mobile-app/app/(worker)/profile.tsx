@@ -39,8 +39,8 @@ export default function WorkerProfileScreen() {
     try {
       const currentUser = await getCurrentUser();
       setUser(currentUser as UserProfile);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Unable to load profile.');
+    } catch {
+      router.replace('/signin');
     } finally {
       setLoading(false);
     }
@@ -61,7 +61,7 @@ export default function WorkerProfileScreen() {
             await logoutUser();
             console.log('✅ Profile: Logout successful, redirecting to login...');
             // Use router.replace to prevent going back
-            router.replace('/(auth)/login');
+            router.replace('/signin');
           } catch (error) {
             console.error('❌ Profile: Logout failed', error);
             Alert.alert('Error', 'Failed to logout. Please try again.');
@@ -73,6 +73,10 @@ export default function WorkerProfileScreen() {
 
   const handleEditProfile = () => {
     router.push('/edit-profile');
+  };
+
+  const handlePostService = () => {
+    router.push('/(worker)/post-service');
   };
 
   const calculateProfileCompletion = (profile: UserProfile | null) => {
@@ -275,6 +279,13 @@ export default function WorkerProfileScreen() {
             variant="outline"
             size="large"
             icon="❓"
+          />
+          <Button
+            label="Post Service"
+            onPress={handlePostService}
+            variant="outline"
+            size="large"
+            icon="🛠️"
           />
           <Button
             label="Logout"

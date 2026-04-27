@@ -13,7 +13,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getAllJobs, JobItem } from '@/src/services/jobService';
+import { getAllJobs, getWorkerJobs, JobItem } from '@/src/services/jobService';
 import { getMe, UserProfile } from '@/src/services/userService';
 
 export default function WorkerDashboardScreen() {
@@ -38,8 +38,8 @@ export default function WorkerDashboardScreen() {
       setUser(userData);
 
       const jobsData = await getAllJobs();
-      const pendingJobs = jobsData.filter((j) => j.status === 'pending');
-      setJobs(pendingJobs);
+      const activeJobs = jobsData.filter((j) => j.status === 'pending' || j.status === 'accepted' || j.status === 'in_progress');
+      setJobs(activeJobs);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load dashboard';
@@ -52,6 +52,28 @@ export default function WorkerDashboardScreen() {
 
   const handleViewJobs = () => router.push('/(worker)/available-jobs');
   const handleViewProfile = () => router.push('/(worker)/profile');
+
+  const handleOpenInProgress = async () => {
+    try {
+      const workerJobs = await getWorkerJobs();
+      const activeJob = workerJobs.find((job) => job.status === 'in_progress' || job.status === 'accepted');
+
+      if (activeJob) {
+        router.push({
+          pathname: '/(worker)/in-progress',
+          params: { jobId: activeJob.id },
+        });
+        return;
+      }
+
+      Alert.alert('No Active Job', 'You do not have an active job yet.');
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to load active jobs');
+    }
+  };
+
+  const handleManageServices = () => router.push('/(worker)/manage-services');
+  const handleActiveJobs = () => router.push('/(worker)/active-jobs');
 
   const handleViewEarnings = () =>
     Alert.alert('Earnings', 'Earnings feature coming soon!');
@@ -217,6 +239,24 @@ export default function WorkerDashboardScreen() {
             variant="primary"
             size="large"
             style={styles.viewAllButton}
+          />
+          <Button
+            label="In Progress"
+            onPress={handleOpenInProgress}
+            variant="outline"
+            size="large"
+          />
+          <Button
+            label="Manage Services"
+            onPress={handleManageServices}
+            variant="outline"
+            size="large"
+          />
+          <Button
+            label="Active Jobs"
+            onPress={handleActiveJobs}
+            variant="outline"
+            size="large"
           />
         </View>
 

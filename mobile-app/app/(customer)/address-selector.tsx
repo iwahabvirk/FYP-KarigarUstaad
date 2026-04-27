@@ -17,6 +17,7 @@ import { dummyAddresses } from '@/src/data';
 export default function AddressSelectorScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const serviceId = params.serviceId as string;
   const workerId = params.workerId as string;
   const workerName = params.workerName as string;
   const category = params.category as string;
@@ -32,6 +33,7 @@ export default function AddressSelectorScreen() {
     router.push({
       pathname: '/(customer)/booking-summary',
       params: {
+        serviceId,
         workerId,
         workerName,
         category,

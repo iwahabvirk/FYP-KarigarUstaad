@@ -84,24 +84,16 @@ export default function JobDetailsScreen() {
     setAccepting(true);
     try {
       const result = await acceptJob(jobId);
+      const acceptedJobId = result.data.id || result.data._id || jobId;
       console.log('✅ Job Details Screen: Job accepted successfully:', {
-        jobId,
+        jobId: acceptedJobId,
         message: result.message,
       });
 
-      Alert.alert('Success', `You've accepted "${job.title}". You'll start working on this job now.`, [
-        {
-          text: 'Go to In Progress',
-          onPress: () => {
-            console.log('👷 Job Details Screen: Navigating to in-progress screen');
-            setAccepting(false);
-            router.replace({
-              pathname: '/(worker)/in-progress',
-              params: { jobId },
-            });
-          },
-        },
-      ]);
+      router.replace({
+        pathname: '/(worker)/in-progress',
+        params: { jobId: acceptedJobId },
+      });
     } catch (error: any) {
       console.error('❌ Job Details Screen: Failed to accept job', {
         jobId,

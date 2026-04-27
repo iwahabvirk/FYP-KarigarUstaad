@@ -1,4 +1,6 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
+
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
@@ -11,6 +13,7 @@ const workerRoutes = require('./routes/workerRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const walletRoutes = require('./routes/walletRoutes');
 const userRoutes = require('./routes/userRoutes');
+const serviceRoutes = require('./routes/serviceRoutes');
 
 // Initialize Express app
 const app = express();
@@ -28,7 +31,7 @@ async function startServer() {
     console.log(`📍 Available at http://localhost:${PORT} (local machine)`);
     console.log(`📱 For mobile/emulator, use your local IP: http://<YOUR_IP>:${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
-    console.log(`🗄️  Database: ${process.env.MONGODB_URI || 'MongoDB Connected'}\n`);
+    console.log(`🗄️  Database: ${process.env.MONGO_URI || process.env.MONGODB_URI || 'MongoDB Connected'}\n`);
   });
 }
 
@@ -67,6 +70,7 @@ app.use('/api/applications', applicationRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wallet', walletRoutes);
+app.use('/api/services', serviceRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

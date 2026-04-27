@@ -3,6 +3,7 @@ const {
   createJob,
   getAllJobs,
   getMyJobs,
+  getWorkerJobs,
   getJobById,
   updateJob,
   deleteJob,
@@ -21,6 +22,7 @@ const router = express.Router();
 // Protected routes - MUST come before :id routes
 router.post('/', protect, authorizeRoles('employer', 'customer'), createJob);
 router.get('/my', protect, authorizeRoles('employer', 'customer'), getMyJobs);
+router.get('/worker/my', protect, authorizeRoles('worker'), getWorkerJobs);
 
 // Worker action routes - MUST come before /:id
 router.put('/:id/accept', protect, authorizeRoles('worker'), acceptJob);
@@ -29,11 +31,11 @@ router.put('/:id/complete', protect, authorizeRoles('worker'), completeJob);
 router.post('/:id/apply', protect, authorizeRoles('worker'), applyJob);
 
 // Employer routes - MUST come before /:id
-router.get('/:id/applicants', protect, authorizeRoles('employer'), getJobApplicants);
-router.patch('/:id', protect, authorizeRoles('employer'), updateJob);
-router.put('/:id/status', protect, authorizeRoles('employer'), updateJobStatus);
-router.put('/:id/pay', protect, authorizeRoles('employer'), payForJob);
-router.delete('/:id', protect, authorizeRoles('employer'), deleteJob);
+router.get('/:id/applicants', protect, authorizeRoles('employer', 'customer'), getJobApplicants);
+router.patch('/:id', protect, authorizeRoles('employer', 'customer'), updateJob);
+router.put('/:id/status', protect, authorizeRoles('employer', 'customer'), updateJobStatus);
+router.put('/:id/pay', protect, authorizeRoles('employer', 'customer'), payForJob);
+router.delete('/:id', protect, authorizeRoles('employer', 'customer'), deleteJob);
 
 // Public routes - MUST come last
 router.get('/', getAllJobs);

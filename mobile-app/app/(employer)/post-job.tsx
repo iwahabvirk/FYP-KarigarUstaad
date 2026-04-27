@@ -50,12 +50,8 @@ export default function PostJobScreen() {
         requiredSkills: [category],
       });
 
-      Alert.alert('Success!', 'Job posted successfully!', [
-        {
-          text: 'OK',
-          onPress: () => router.replace('/(employer)/dashboard'),
-        },
-      ]);
+      Alert.alert('Success!', 'Job posted successfully!');
+      router.replace('/(employer)/dashboard');
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Unable to post job.');
     } finally {

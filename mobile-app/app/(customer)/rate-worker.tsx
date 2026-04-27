@@ -9,13 +9,17 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { createReview } from '@/src/services/reviewService';
 
 export default function RateWorkerScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const workerId = params.workerId as string;
+  const jobId = params.jobId as string;
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -28,11 +32,17 @@ export default function RateWorkerScreen() {
 
     try {
       setSubmitting(true);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await createReview({
+        worker: workerId,
+        job: jobId,
+        rating,
+        comment: comment.trim() || 'Service completed successfully',
+      });
+
       Alert.alert('Thank You!', 'Your review has been submitted', [
         {
           text: 'OK',
-          onPress: () => router.replace('/(customer)/home'),
+          onPress: () => router.replace('/dashboard'),
         },
       ]);
     } catch (error) {

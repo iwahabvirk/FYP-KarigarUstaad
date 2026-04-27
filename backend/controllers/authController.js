@@ -153,7 +153,14 @@ exports.getCurrentUser = async (req, res) => {
 // Logout User
 exports.logout = async (req, res) => {
   try {
-    // Token is cleared on frontend, this endpoint just confirms logout
+    // For token-in-header auth, frontend clears token storage.
+    // If token cookies are used, clear them as well.
+    res.clearCookie('token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production',
+    });
+
     res.status(200).json({
       success: true,
       message: 'Logged out successfully',

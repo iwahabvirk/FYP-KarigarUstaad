@@ -41,7 +41,7 @@ const jobSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'in_progress', 'arrived', 'completed', 'paid', 'cancelled'],
+      enum: ['pending', 'accepted', 'in_progress', 'arrived', 'completed', 'paid', 'cancelled'],
       default: 'pending',
     },
     requiredSkills: [

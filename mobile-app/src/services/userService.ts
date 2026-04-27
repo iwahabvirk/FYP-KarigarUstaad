@@ -1,4 +1,4 @@
-import { api } from './api';
+import { api, getAuthToken } from './api';
 
 export interface UserProfile {
   id: string;
@@ -69,6 +69,11 @@ const normalizeUser = (user: any): UserProfile => {
 export const getMe = async (): Promise<UserProfile> => {
   console.log('👤 UserService: Fetching current user profile...');
   try {
+    const token = await getAuthToken();
+    if (!token) {
+      throw new Error('No auth token found');
+    }
+
     const response = await api.get<{ success: boolean; data: UserProfile }>('/users/me');
     const normalizedUser = normalizeUser(response.data.data);
     console.log(`✅ UserService: Got user profile for ${normalizedUser.name}`);

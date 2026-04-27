@@ -75,17 +75,9 @@ export default function PostJobScreen() {
       });
 
       console.log('✅ Post Job: Job created successfully with ID:', result.id);
-
-      Alert.alert('Success', 'Job posted successfully.', [
-        {
-          text: 'OK',
-          onPress: () => {
-            console.log('🛠️  Post Job: Resetting form and navigating to My Jobs');
-            resetForm();
-            router.replace('/(customer)/my-jobs');
-          },
-        },
-      ]);
+      resetForm();
+      Alert.alert('Success', 'Job posted successfully.');
+      router.replace('/(customer)/home');
     } catch (error: any) {
       console.error('❌ Post Job: Error creating job:', {
         message: error?.message,

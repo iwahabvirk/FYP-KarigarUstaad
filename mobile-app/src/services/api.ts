@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //   - http://192.168.x.x:5000/api (local network - replace with your backend IP)
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
 const AUTH_TOKEN_KEY = 'karigarAuthToken';
+let isLoggingOut = false;
 
 // Debug logging
 console.log('🔧 API Configuration:');
@@ -32,6 +33,10 @@ export const setAuthToken = async (token: string): Promise<void> => {
 export const clearAuthToken = async (): Promise<void> => {
   await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
   console.log('🔑 Auth token cleared');
+};
+
+export const setLoggingOut = (value: boolean): void => {
+  isLoggingOut = value;
 };
 
 export const api = axios.create({
@@ -85,7 +90,7 @@ api.interceptors.response.use(
       networkError: error.code === 'ECONNREFUSED' ? 'Cannot reach server - check API_BASE_URL' : null,
     });
 
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !isLoggingOut) {
       console.log('🔐 Auth token expired, clearing...');
       await clearAuthToken();
     }

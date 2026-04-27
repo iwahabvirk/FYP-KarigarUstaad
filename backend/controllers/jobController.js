@@ -17,6 +17,12 @@ const ensureValidJobId = (id, res) => {
   return true;
 };
 
+const normalizeJobStatus = (status) => {
+  if (!status) return status;
+  if (status === 'in-progress') return 'in_progress';
+  return status;
+};
+
 // Create Job (Employer only)
 exports.createJob = async (req, res) => {
   try {
@@ -129,6 +135,26 @@ exports.getAllJobs = async (req, res) => {
 exports.getMyJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ employer: req.user.id })
+      .sort('-createdAt')
+      .populate('employer', 'name email');
+
+    res.status(200).json({
+      success: true,
+      count: jobs.length,
+      data: jobs,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Get Worker Jobs (Worker)
+exports.getWorkerJobs = async (req, res) => {
+  try {
+    const jobs = await Job.find({ assignedWorker: req.user.id })
       .sort('-createdAt')
       .populate('employer', 'name email');
 
@@ -310,7 +336,7 @@ exports.updateJobStatus = async (req, res) => {
     const jobId = req.params.id;
     if (!ensureValidJobId(jobId, res)) return;
 
-    const { status } = req.body;
+    const status = normalizeJobStatus(req.body.status);
 
     if (!status || !['pending', 'accepted', 'in_progress', 'completed', 'paid'].includes(status)) {
       return res.status(400).json({

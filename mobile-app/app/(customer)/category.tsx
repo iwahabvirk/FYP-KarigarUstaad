@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,18 +7,37 @@ import {
   FlatList,
   TouchableOpacity,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getWorkersByCategory } from '@/src/data';
+import { getAllServices, ServiceItem } from '@/src/services/serviceService';
 
 export default function CategoryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const category = params.category as string;
-  const [userLocation] = React.useState('DHA Lahore'); // Get from user profile in real app
+  const [userLocation] = React.useState('DHA Lahore');
+  const [services, setServices] = useState<ServiceItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchServices();
+  }, [category]);
+
+  const fetchServices = async () => {
+    try {
+      setLoading(true);
+      const apiServices = await getAllServices(category);
+      setServices(apiServices);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to load services');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Navigate to AI recommendations for this category
   const handleNavigateToAI = () => {
@@ -28,17 +47,14 @@ export default function CategoryScreen() {
     });
   };
 
-  // Alternative: Manual worker browsing
-  const workers = useMemo(() => getWorkersByCategory(category), [category]);
-
-  const handleWorkerSelect = (workerId: string) => {
+  const handleWorkerSelect = (serviceId: string) => {
     router.push({
       pathname: '/(customer)/service-details',
-      params: { workerId },
+      params: { serviceId },
     });
   };
 
-  const renderWorkerCard = ({ item }: { item: (typeof workers)[0] }) => (
+  const renderWorkerCard = ({ item }: { item: ServiceItem }) => (
     <TouchableOpacity
       style={styles.workerCard}
       onPress={() => handleWorkerSelect(item.id)}
@@ -48,21 +64,21 @@ export default function CategoryScreen() {
           <View style={styles.workerInfo}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {item.name
+                {item.worker.name
                   .split(' ')
                   .map((n) => n[0])
                   .join('')}
               </Text>
             </View>
             <View style={styles.details}>
-              <Text style={styles.name}>{item.name}</Text>
+              <Text style={styles.name}>{item.worker.name}</Text>
               <View style={styles.ratingContainer}>
                 <Text style={styles.stars}>
-                  {'⭐'.repeat(Math.floor(item.rating))}
+                  {'⭐'.repeat(Math.floor(item.worker.rating || 0))}
                 </Text>
-                <Text style={styles.ratingText}>{item.rating} ({item.reviews})</Text>
+                <Text style={styles.ratingText}>{(item.worker.rating || 0).toFixed(1)}</Text>
               </View>
-              <Text style={styles.distance}>{item.distance}</Text>
+              <Text style={styles.distance}>{item.category}</Text>
             </View>
             <Text style={styles.price}>Rs. {item.price}</Text>
           </View>
@@ -104,17 +120,23 @@ export default function CategoryScreen() {
 
       {/* Manual Browse Section */}
       <View style={styles.browseHeaderContainer}>
-        <Text style={styles.browseTitle}>Browse All Workers</Text>
-        <Text style={styles.statsText}>{workers.length} available</Text>
+        <Text style={styles.browseTitle}>Browse All Services</Text>
+        <Text style={styles.statsText}>{services.length} available</Text>
       </View>
 
-      <FlatList
-        data={workers}
-        keyExtractor={(item) => item.id}
-        renderItem={renderWorkerCard}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={services}
+          keyExtractor={(item) => item.id}
+          renderItem={renderWorkerCard}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
     </SafeAreaView>
   );
 }

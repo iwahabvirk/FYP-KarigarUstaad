@@ -9,26 +9,54 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { getJobById, updateJobStatus } from '@/src/services/jobService';
 
 export default function LiveTrackingScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const jobId = params.jobId as string;
+  const workerId = params.workerId as string;
   const [status, setStatus] = useState('Worker is on the way');
   const [jobCompleted, setJobCompleted] = useState(false);
   const [marking, setMarking] = useState(false);
+  const [job, setJob] = useState<any>(null);
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
   const completeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setStatus('Worker has arrived!');
-    }, 5000);
+    loadJobStatus();
 
-    return () => clearTimeout(timer);
+    const interval = setInterval(() => {
+      loadJobStatus();
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
+
+  const loadJobStatus = async () => {
+    if (!jobId) return;
+
+    try {
+      const jobData = await getJobById(jobId);
+      setJob(jobData);
+
+      if (jobData.status === 'accepted') {
+        setStatus('Worker accepted and is preparing to arrive');
+      } else if (jobData.status === 'in_progress') {
+        setStatus('Worker is on the way');
+      } else if (jobData.status === 'arrived') {
+        setStatus('Worker has arrived!');
+      } else if (jobData.status === 'completed') {
+        setStatus('Job completed');
+      }
+    } catch (error) {
+      console.error('Live tracking status fetch failed', error);
+    }
+  };
 
   useEffect(() => {
     const animation = Animated.loop(
@@ -53,7 +81,9 @@ export default function LiveTrackingScreen() {
     setMarking(true);
     try {
       // Simulate marking as completed
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      if (jobId) {
+        await updateJobStatus(jobId, 'completed');
+      }
       
       // Show success animation
       setJobCompleted(true);
@@ -69,7 +99,14 @@ export default function LiveTrackingScreen() {
         [
           {
             text: 'Rate Worker',
-            onPress: () => router.push('/(customer)/rate-worker'),
+            onPress: () =>
+              router.push({
+                pathname: '/(customer)/rate-worker',
+                params: {
+                  jobId,
+                  workerId: workerId || job?.assignedWorker,
+                },
+              }),
           },
         ]
       );
@@ -81,7 +118,13 @@ export default function LiveTrackingScreen() {
   };
 
   const handleRateWorker = () => {
-    router.push('/(customer)/rate-worker');
+    router.push({
+      pathname: '/(customer)/rate-worker',
+      params: {
+        jobId,
+        workerId: workerId || job?.assignedWorker,
+      },
+    });
   };
 
   return (

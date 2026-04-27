@@ -1,40 +1,79 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
-import { getWorkersByCategory } from '@/src/data';
-import { Worker } from '@/src/types';
+import { getAllServices, ServiceItem } from '@/src/services/serviceService';
 
 export default function AIMatchScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const category = params.category as string || 'Painter';
+  const category = params.category as string || 'Electrical';
   const location = params.location as string || 'DHA Lahore';
+  const description = params.description as string || '';
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [services, setServices] = useState<ServiceItem[]>([]);
+
+  useEffect(() => {
+    loadSuggestions();
+  }, [category, location, description]);
+
+  const loadSuggestions = async () => {
+    try {
+      setLoading(true);
+      const allServices = await getAllServices();
+      setServices(allServices);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to load AI suggestions');
+    } finally {
+      setLoading(false);
+    }
+  };
   
-  // Get workers in this category (sorted by rating)
-  const workers = useMemo(() => {
-    const categoryWorkers = getWorkersByCategory(category);
-    return categoryWorkers.sort((a, b) => b.rating - a.rating);
-  }, [category]);
+  const rankedServices = useMemo(() => {
+    const keywords = description
+      .toLowerCase()
+      .split(' ')
+      .map((word) => word.trim())
+      .filter((word) => word.length > 2);
 
-  const handleSelectWorker = (worker: Worker) => {
+    const withScore = services.map((service) => {
+      let score = 0;
+
+      if (service.category.toLowerCase() === category.toLowerCase()) {
+        score += 40;
+      }
+
+      const combinedText = `${service.title} ${service.description} ${service.category}`.toLowerCase();
+      const keywordHits = keywords.filter((keyword) => combinedText.includes(keyword)).length;
+      score += keywordHits * 10;
+
+      if ((service.worker.location || '').toLowerCase().includes(location.toLowerCase())) {
+        score += 20;
+      }
+
+      score += (service.worker.rating || 0) * 6;
+
+      return { ...service, score };
+    });
+
+    return withScore.sort((a, b) => b.score - a.score);
+  }, [services, category, location, description]);
+
+  const handleSelectService = (service: ServiceItem) => {
     router.push({
       pathname: '/(customer)/service-details',
-      params: {
-        workerId: worker.id,
-      },
+      params: { serviceId: service.id },
     });
   };
 
-  const renderWorker = ({ item, index }: { item: Worker; index: number }) => {
+  const renderWorker = ({ item, index }: { item: ServiceItem & { score: number }; index: number }) => {
     const isTop = index === 0;
     const badges = [];
-    if (item.rating >= 4.5) badges.push('Top Rated');
-    badges.push(item.distance);
-    if (item.reviews > 50) badges.push('Highly Reviewed');
+    if ((item.worker.rating || 0) >= 4.5) badges.push('Top Rated');
+    if (item.worker.location) badges.push(item.worker.location);
+    badges.push(`AI Score ${item.score.toFixed(1)}`);
 
     return (
       <Card style={styles.workerCard}>
@@ -43,18 +82,18 @@ export default function AIMatchScreen() {
         <View style={styles.workerProfile}>
           <View style={styles.workerAvatar}>
             <Text style={styles.avatarText}>
-              {item.name
+              {item.worker.name
                 .split(' ')
                 .map((n) => n[0])
                 .join('')}
             </Text>
           </View>
           <View style={styles.workerInfo}>
-            <Text style={styles.workerName}>{item.name}</Text>
-            <Text style={styles.workerCategory}>{item.category}</Text>
+            <Text style={styles.workerName}>{item.worker.name}</Text>
+            <Text style={styles.workerCategory}>{item.title}</Text>
             <View style={styles.ratingContainer}>
-              <Text style={styles.rating}>⭐ {item.rating.toFixed(1)}</Text>
-              <Text style={styles.reviews}>({item.reviews} reviews)</Text>
+              <Text style={styles.rating}>⭐ {(item.worker.rating || 0).toFixed(1)}</Text>
+              <Text style={styles.reviews}>{item.category}</Text>
             </View>
           </View>
         </View>
@@ -68,10 +107,10 @@ export default function AIMatchScreen() {
         </View>
 
         <View style={styles.priceRow}>
-          <Text style={styles.priceLabel}>Rs. {item.price}/hour</Text>
+          <Text style={styles.priceLabel}>Rs. {item.price}</Text>
           <TouchableOpacity 
             style={styles.selectButton}
-            onPress={() => handleSelectWorker(item)}
+            onPress={() => handleSelectService(item)}
           >
             <Text style={styles.selectButtonText}>Select →</Text>
           </TouchableOpacity>
@@ -105,7 +144,7 @@ export default function AIMatchScreen() {
       </View>
 
       <FlatList
-        data={workers}
+        data={rankedServices}
         keyExtractor={(item) => item.id}
         renderItem={renderWorker}
         contentContainerStyle={styles.listContainer}

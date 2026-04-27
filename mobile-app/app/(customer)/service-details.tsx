@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,35 +7,71 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getWorkerById } from '@/src/data';
+import { getServiceById, ServiceItem } from '@/src/services/serviceService';
 
 export default function ServiceDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const workerId = params.workerId as string;
-  const worker = useMemo(() => getWorkerById(workerId), [workerId]);
+  const serviceId = params.serviceId as string;
+  const [service, setService] = useState<ServiceItem | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [hiring, setHiring] = useState(false);
 
-  if (!worker) {
+  useEffect(() => {
+    loadService();
+  }, [serviceId]);
+
+  const loadService = async () => {
+    if (!serviceId) {
+      Alert.alert('Error', 'Invalid service details.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const serviceData = await getServiceById(serviceId);
+      setService(serviceData);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to load service details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>Worker not found</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!service) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.errorText}>Service not found</Text>
       </SafeAreaView>
     );
   }
 
   const handleHireWorker = () => {
-    Alert.alert('Proceeding', `Moving to booking checkout...`);
     router.push({
       pathname: '/(customer)/address-selector',
-      params: { 
-        workerName: worker.name,
-        workerId: worker.id,
-        category: worker.category 
+      params: {
+        serviceId: service.id,
+        workerId: service.worker.id || service.worker._id,
+        workerName: service.worker.name,
+        category: service.category,
+        serviceTitle: service.title,
       },
     });
   };
@@ -57,38 +93,37 @@ export default function ServiceDetailsScreen() {
           <View style={styles.profileHeader}>
             <View style={styles.largeAvatar}>
               <Text style={styles.avatarText}>
-                {worker.name
+                {service.worker.name
                   .split(' ')
                   .map((n) => n[0])
                   .join('')}
               </Text>
             </View>
             <View style={styles.profileInfo}>
-              <Text style={styles.workerName}>{worker.name}</Text>
+              <Text style={styles.workerName}>{service.worker.name}</Text>
               <View style={styles.ratingBadge}>
-                <Text style={styles.ratingStars}>⭐ {worker.rating}</Text>
-                <Text style={styles.reviewCount}>({worker.reviews} reviews)</Text>
+                <Text style={styles.ratingStars}>⭐ {(service.worker.rating || 0).toFixed(1)}</Text>
               </View>
-              <Text style={styles.location}>{worker.distance} away</Text>
+              <Text style={styles.location}>{service.worker.location || 'Location not specified'}</Text>
             </View>
           </View>
         </Card>
 
         <Card>
           <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.description}>{worker.description}</Text>
+          <Text style={styles.description}>{service.description}</Text>
         </Card>
 
         <Card>
           <Text style={styles.sectionTitle}>Service Details</Text>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Category:</Text>
-            <Text style={styles.detailValue}>{worker.category}</Text>
+            <Text style={styles.detailValue}>{service.category}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Hourly Rate:</Text>
-            <Text style={styles.detailValue}>₹{worker.price}/hr</Text>
+            <Text style={styles.detailValue}>Rs. {service.price}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>
@@ -128,7 +163,7 @@ export default function ServiceDetailsScreen() {
 
       <View style={styles.footer}>
         <Button
-          label={`Hire for ₹${worker.price}`}
+          label={`Hire for Rs. ${service.price}`}
           onPress={handleHireWorker}
           size="large"
           style={styles.hireButton}
@@ -278,6 +313,11 @@ const styles = StyleSheet.create({
     color: colors.text,
     textAlign: 'center',
     marginTop: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   footer: {
     paddingHorizontal: 20,

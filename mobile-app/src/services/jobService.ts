@@ -70,6 +70,19 @@ export const getMyJobs = async (): Promise<JobItem[]> => {
   }
 };
 
+export const getWorkerJobs = async (): Promise<JobItem[]> => {
+  console.log('📋 JobService: Fetching worker jobs...');
+  try {
+    const response = await api.get<{ success: boolean; data: JobItem[] }>('/jobs/worker/my');
+    const normalizedJobs = normalizeJobs(response.data.data);
+    console.log(`📋 JobService: Got ${normalizedJobs.length} worker jobs`);
+    return normalizedJobs;
+  } catch (error) {
+    console.error('❌ JobService: Failed to fetch worker jobs', error);
+    throw error;
+  }
+};
+
 export const getJobById = async (jobId: string): Promise<JobItem> => {
   console.log(`📋 JobService: Fetching job ${jobId}...`);
 

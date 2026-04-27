@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { api, setAuthToken, clearAuthToken } from './api';
+import { api, setAuthToken, clearAuthToken, getAuthToken, setLoggingOut } from './api';
 
 export interface UserPayload {
   id: string;
@@ -51,22 +51,41 @@ export const registerUser = async (
 };
 
 export const getCurrentUser = async (): Promise<UserPayload> => {
+  const token = await getAuthToken();
+
+  if (!token) {
+    throw new Error('No auth token found');
+  }
+
   const response = await api.get<{ success: boolean; user: UserPayload }>('/auth/me');
   return response.data.user;
 };
 
 export const logoutUser = async (): Promise<void> => {
-  try {
-    // Call logout endpoint to server
-    console.log('🔑 AuthService: Calling logout endpoint...');
-    await api.post('/auth/logout', {});
-  } catch (error) {
-    console.warn('⚠️  AuthService: Logout endpoint call failed (clearing locally anyway):', error);
-  }
-  
-  // Clear local storage
+  const token = await getAuthToken();
+
+  setLoggingOut(true);
+
+  // Clear local auth state first to immediately block protected API calls (e.g., /auth/me).
   await clearAuthToken();
   await AsyncStorage.removeItem(USER_DATA_KEY);
+
+  try {
+    if (token) {
+      // Notify backend about logout using the saved token value.
+      console.log('🔑 AuthService: Calling logout endpoint...');
+      await api.post('/auth/logout', {}, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+    }
+  } catch (error) {
+    console.warn('⚠️  AuthService: Logout endpoint call failed (clearing locally anyway):', error);
+  } finally {
+    setLoggingOut(false);
+  }
+
   console.log('✅ AuthService: User logged out successfully');
 };
 

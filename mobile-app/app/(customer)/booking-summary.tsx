@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,29 +12,67 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getWorkerById, dummyAddresses } from '@/src/data';
+import { dummyAddresses } from '@/src/data';
+import { getServiceById, hireService, ServiceItem } from '@/src/services/serviceService';
 
 export default function BookingSummaryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const serviceId = params.serviceId as string;
   const workerId = params.workerId as string;
   const addressId = params.addressId as string;
   const [confirming, setConfirming] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [service, setService] = useState<ServiceItem | null>(null);
 
-  const worker = getWorkerById(workerId);
   const address = dummyAddresses.find((a) => a.id === addressId);
-  const serviceFee = worker?.price || 500;
+  const serviceFee = service?.price || 500;
   const platformFee = 50;
   const gst = Math.round((serviceFee + platformFee) * 0.18);
   const total = serviceFee + platformFee + gst;
 
+  useEffect(() => {
+    loadService();
+  }, [serviceId]);
+
+  const loadService = async () => {
+    if (!serviceId) {
+      Alert.alert('Error', 'Invalid service selected');
+      router.back();
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const serviceData = await getServiceById(serviceId);
+      setService(serviceData);
+    } catch (error: any) {
+      Alert.alert('Error', error?.message || 'Unable to load service');
+      router.back();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleConfirmBooking = async () => {
+    if (!service) {
+      return;
+    }
+
     setConfirming(true);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const result = await hireService(service.id, address?.address);
+      const createdJob = result.data.job;
+
       router.push({
         pathname: '/(customer)/payment',
-        params: { workerId, addressId, totalAmount: total.toString() },
+        params: {
+          jobId: createdJob.id || createdJob._id,
+          workerId,
+          addressId,
+          totalAmount: total.toString(),
+          serviceTitle: service.title,
+        },
       });
     } catch (error) {
       Alert.alert('Error', 'Failed to proceed. Please try again.');
@@ -42,6 +80,16 @@ export default function BookingSummaryScreen() {
       setConfirming(false);
     }
   };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading summary...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -59,17 +107,17 @@ export default function BookingSummaryScreen() {
           <View style={styles.workerCard}>
             <View style={styles.avatar}>
               <Text style={styles.avatarText}>
-                {worker?.name
+                {service?.worker.name
                   .split(' ')
                   .map((n) => n[0])
                   .join('')}
               </Text>
             </View>
             <View style={styles.workerInfo}>
-              <Text style={styles.workerName}>{worker?.name}</Text>
-              <Text style={styles.workerCategory}>{worker?.category}</Text>
+              <Text style={styles.workerName}>{service?.worker.name}</Text>
+              <Text style={styles.workerCategory}>{service?.category}</Text>
               <View style={styles.ratingBadge}>
-                <Text style={styles.rating}>⭐ {worker?.rating}</Text>
+                <Text style={styles.rating}>⭐ {(service?.worker.rating || 0).toFixed(1)}</Text>
               </View>
             </View>
           </View>
@@ -79,7 +127,7 @@ export default function BookingSummaryScreen() {
           <Text style={styles.sectionTitle}>Service Details</Text>
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Service Type</Text>
-            <Text style={styles.detailValue}>{worker?.category}</Text>
+            <Text style={styles.detailValue}>{service?.category}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>
@@ -325,5 +373,14 @@ const styles = StyleSheet.create({
   footer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: colors.textSecondary,
+    fontSize: 14,
   },
 });

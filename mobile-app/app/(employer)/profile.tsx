@@ -29,8 +29,8 @@ export default function EmployerProfileScreen() {
       setLoading(true);
       const currentUser = await getCurrentUser();
       setUser(currentUser);
-    } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Unable to load profile.');
+    } catch {
+      router.replace('/signin');
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ export default function EmployerProfileScreen() {
             await logoutUser();
             console.log('✅ Profile: Logout successful, redirecting to login...');
             // Use router.replace to prevent going back
-            router.replace('/(auth)/login');
+            router.replace('/signin');
           } catch (error) {
             console.error('❌ Profile: Logout failed', error);
             Alert.alert('Error', 'Failed to logout. Please try again.');

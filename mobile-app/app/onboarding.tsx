@@ -37,12 +37,12 @@ export default function OnboardingScreen() {
     if (currentIndex < onboardingSlides.length - 1) {
       scrollToIndex(currentIndex + 1);
     } else {
-      router.replace('/(auth)/login');
+      router.replace('/signin');
     }
   };
 
   const handleSkip = () => {
-    router.replace('/(auth)/login');
+    router.replace('/signin');
   };
 
   const renderSlide = ({ item }: { item: (typeof onboardingSlides)[0] }) => (

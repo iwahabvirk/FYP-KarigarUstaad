@@ -119,6 +119,7 @@ exports.updateApplicationStatus = async (req, res) => {
       const job = await Job.findById(application.job._id);
       if (job) {
         job.status = 'accepted';
+        job.assignedWorker = application.worker;
         await job.save();
         await Application.updateMany(
           { job: job._id, _id: { $ne: application._id }, status: 'pending' },

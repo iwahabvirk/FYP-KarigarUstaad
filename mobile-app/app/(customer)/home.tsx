@@ -7,8 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
-  Image,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -17,11 +17,11 @@ import { Card } from '@/components/Card';
 import { getMe, UserProfile, getRecommendedWorkers, RecommendedWorker } from '@/src/services/userService';
 
 const CATEGORIES = [
-  { id: '1', name: 'Electrician', icon: '⚡' },
-  { id: '2', name: 'Plumber', icon: '🔧' },
-  { id: '3', name: 'Painter', icon: '🎨' },
-  { id: '4', name: 'Carpenter', icon: '🪵' },
-  { id: '5', name: 'AC Repair', icon: '❄️' },
+  { id: '1', name: 'Electrical', icon: '⚡' },
+  { id: '2', name: 'Plumbing', icon: '🔧' },
+  { id: '3', name: 'Painting', icon: '🎨' },
+  { id: '4', name: 'Carpentry', icon: '🪵' },
+  { id: '5', name: 'Repair', icon: '❄️' },
 ];
 
 export default function CustomerHomeScreen() {
@@ -68,9 +68,25 @@ export default function CustomerHomeScreen() {
   };
 
   const handleWorkerPress = (workerId: string) => {
+    const selected = recommendedWorkers.find((worker) => worker.name === workerId);
     router.push({
-      pathname: '/(customer)/service-details',
-      params: { workerId },
+      pathname: '/(customer)/ai-match',
+      params: {
+        category: selected?.skills?.[0] || 'Electrical',
+        location: user?.location || 'Lahore',
+        description: searchQuery || '',
+      },
+    });
+  };
+
+  const handleAISuggestions = () => {
+    router.push({
+      pathname: '/(customer)/ai-match',
+      params: {
+        category: 'Electrical',
+        location: user?.location || 'Lahore',
+        description: searchQuery || '',
+      },
     });
   };
 
@@ -106,17 +122,21 @@ export default function CustomerHomeScreen() {
 
         {/* Quick Access Buttons */}
         <View style={styles.quickAccessContainer}>
-          <TouchableOpacity style={styles.quickButton}>
+          <TouchableOpacity style={styles.quickButton} onPress={() => Alert.alert('Info', 'Fair price mode enabled for suggestions')}>
             <Text style={styles.quickButtonIcon}>🎯</Text>
             <Text style={styles.quickButtonText}>Fair Price</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickButton}>
+          <TouchableOpacity style={styles.quickButton} onPress={() => Alert.alert('Info', 'Showing top-rated workers in AI suggestions')}>
             <Text style={styles.quickButtonIcon}>⭐</Text>
             <Text style={styles.quickButtonText}>Top Rated</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickButton}>
+          <TouchableOpacity style={styles.quickButton} onPress={() => Alert.alert('Info', 'Urgent filtering is available in AI suggestions')}>
             <Text style={styles.quickButtonIcon}>🚀</Text>
             <Text style={styles.quickButtonText}>Urgent</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickButton} onPress={handleAISuggestions}>
+            <Text style={styles.quickButtonIcon}>🤖</Text>
+            <Text style={styles.quickButtonText}>AI Suggest</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.quickButton} onPress={() => router.push('/(customer)/post-job')}>
             <Text style={styles.quickButtonIcon}>➕</Text>
@@ -128,7 +148,7 @@ export default function CustomerHomeScreen() {
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>✨ Recommended For You</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleAISuggestions}>
               <Text style={styles.seeAll}>See all</Text>
             </TouchableOpacity>
           </View>

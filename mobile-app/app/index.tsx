@@ -22,16 +22,16 @@ export default function SplashScreen() {
         if (user.role === 'employer') {
           router.replace('/(employer)/dashboard');
         } else {
-          router.replace('/(worker)/home');
+          router.replace('/(worker)/dashboard');
         }
       } else {
         // No token, go to login
-        router.replace('/(auth)/login');
+        router.replace('/signin');
       }
     } catch (error) {
       // Token invalid or error, go to login
       await AsyncStorage.removeItem('karigarAuthToken');
-      router.replace('/(auth)/login');
+      router.replace('/signin');
     }
   };
 

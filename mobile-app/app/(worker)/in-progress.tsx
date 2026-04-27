@@ -15,12 +15,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getJobById, completeJob } from '@/src/services/jobService';
+import { getJobById, completeJob, getWorkerJobs } from '@/src/services/jobService';
 
 export default function InProgressScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
-  const jobId = params.jobId as string;
+  const initialJobId = params.jobId as string | undefined;
+  const [jobId, setJobId] = useState<string | null>(initialJobId || null);
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
@@ -58,7 +59,22 @@ export default function InProgressScreen() {
 
   const loadJob = async () => {
     try {
-      const jobData = await getJobById(jobId);
+      let resolvedJobId = jobId;
+
+      if (!resolvedJobId) {
+        const workerJobs = await getWorkerJobs();
+        const activeJob = workerJobs.find((item) => item.status === 'in_progress' || item.status === 'accepted');
+
+        if (!activeJob) {
+          setJob(null);
+          return;
+        }
+
+        resolvedJobId = activeJob.id;
+        setJobId(activeJob.id);
+      }
+
+      const jobData = await getJobById(resolvedJobId);
       setJob(jobData);
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Failed to load job details');
@@ -76,14 +92,20 @@ export default function InProgressScreen() {
 
     setCompleting(true);
     try {
-      const result = await completeJob(jobId, notes.trim());
+      const resolvedJobId = jobId || job?.id;
+
+      if (!resolvedJobId) {
+        throw new Error('No active job selected');
+      }
+
+      const result = await completeJob(resolvedJobId, notes.trim());
       setIsCompleted(true);
       // Navigate to job-completed screen after 1.5 seconds
       setTimeout(() => {
         router.replace({
           pathname: '/(worker)/job-completed',
           params: { 
-            jobId,
+            jobId: resolvedJobId,
             earnings: Math.floor(job.budget * 0.9),
           },
         });
@@ -117,7 +139,14 @@ export default function InProgressScreen() {
   if (!job) {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>Job not found</Text>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.errorText}>No active job found</Text>
+          <Button
+            label="View Available Jobs"
+            onPress={() => router.replace('/(worker)/available-jobs')}
+            size="large"
+          />
+        </View>
       </SafeAreaView>
     );
   }

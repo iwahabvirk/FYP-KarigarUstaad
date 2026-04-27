@@ -29,6 +29,16 @@ export default function RootLayout() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="(employer)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen name="signin" options={{ headerShown: false }} />
+      <Stack.Screen name="dashboard" options={{ headerShown: false }} />
+      <Stack.Screen name="in-progress" options={{ headerShown: false }} />
+      <Stack.Screen name="payment" options={{ headerShown: false }} />
       <Stack.Screen name="edit-profile" />
     </Stack>
   );

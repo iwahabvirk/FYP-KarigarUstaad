@@ -15,14 +15,14 @@ export default function EmployerLayout() {
         const user = await getCurrentUser();
         if (user.role !== 'employer') {
           if (user.role === 'worker') {
-            router.replace('/(worker)/home');
+            router.replace('/(worker)/dashboard');
           } else {
-            router.replace('/(auth)/login');
+            router.replace('/signin');
           }
           return;
         }
       } catch {
-        router.replace('/(auth)/login');
+          router.replace('/signin');
       } finally {
         setLoading(false);
       }
