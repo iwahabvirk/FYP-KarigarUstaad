@@ -149,3 +149,19 @@ exports.getCurrentUser = async (req, res) => {
     });
   }
 };
+
+// Logout User
+exports.logout = async (req, res) => {
+  try {
+    // Token is cleared on frontend, this endpoint just confirms logout
+    res.status(200).json({
+      success: true,
+      message: 'Logged out successfully',
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

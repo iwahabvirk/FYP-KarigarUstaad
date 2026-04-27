@@ -1,23 +1,41 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, Text, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Button } from '@/components/Button';
 
+type SelectRoleParams = {
+  name?: string;
+  email?: string;
+  password?: string;
+};
+
 export default function SelectRoleScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<SelectRoleParams>();
 
   const handleWorkerSelect = () => {
     router.push({
       pathname: '/(auth)/register',
-      params: { role: 'worker' },
+      params: {
+        role: 'worker',
+        name: params.name || '',
+        email: params.email || '',
+        password: params.password || '',
+      },
     });
   };
 
   const handleEmployerSelect = () => {
     router.push({
       pathname: '/(auth)/register',
-      params: { role: 'employer' },
+      params: {
+        role: 'employer',
+        name: params.name || '',
+        email: params.email || '',
+        password: params.password || '',
+      },
     });
   };
 

@@ -11,6 +11,7 @@ export default function WorkerLayout() {
       <Stack.Screen name="available-jobs" />
       <Stack.Screen name="job-details" />
       <Stack.Screen name="in-progress" />
+      <Stack.Screen name="job-completed" />
       <Stack.Screen name="profile" />
       <Stack.Screen name="edit-profile" />
     </Stack>

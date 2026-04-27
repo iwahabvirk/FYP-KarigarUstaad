@@ -37,8 +37,28 @@ export default function EmployerProfileScreen() {
   };
 
   const handleLogout = async () => {
-    await logoutUser();
-    router.replace('/(auth)/login');
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        onPress: () => {},
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        onPress: async () => {
+          try {
+            console.log('🔑 Profile: Starting logout process...');
+            await logoutUser();
+            console.log('✅ Profile: Logout successful, redirecting to login...');
+            // Use router.replace to prevent going back
+            router.replace('/(auth)/login');
+          } catch (error) {
+            console.error('❌ Profile: Logout failed', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+          }
+        },
+      },
+    ]);
   };
 
   if (loading) {

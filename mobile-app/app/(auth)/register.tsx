@@ -4,10 +4,10 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  SafeAreaView,
   Alert,
   TouchableOpacity,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Input } from '@/components/Input';
@@ -16,15 +16,18 @@ import { registerUser } from '@/src/services/authService';
 
 type RegisterParams = {
   role?: 'worker' | 'employer';
+  name?: string;
+  email?: string;
+  password?: string;
 };
 
 export default function RegisterScreen() {
   const params = useLocalSearchParams<RegisterParams>();
   const router = useRouter();
 
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState(params.name || '');
+  const [email, setEmail] = useState(params.email || '');
+  const [password, setPassword] = useState(params.password || '');
   const [role, setRole] = useState<'worker' | 'employer'>(
     params.role === 'employer' ? 'employer' : 'worker',
   );
@@ -36,17 +39,36 @@ export default function RegisterScreen() {
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Validation', 'Please enter a valid email address');
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      Alert.alert('Validation', 'Password must be at least 6 characters');
+      return;
+    }
+
     try {
       setLoading(true);
+      console.log('📝 RegisterScreen: Creating account for', email, 'with role:', role);
+      
       const response = await registerUser({ name, email, password, role });
+      console.log('✅ RegisterScreen: Registration successful');
+      
       Alert.alert('Success', response.message || 'Account created successfully');
 
+      // Navigate based on role
       if (response.user.role === 'employer') {
         router.replace('/(employer)/dashboard');
       } else {
-        router.replace('/(worker)/home');
+        router.replace('/(worker)/dashboard');
       }
     } catch (error: any) {
+      console.error('❌ RegisterScreen: Registration failed:', error);
       Alert.alert('Registration failed', error?.message || 'Unable to create account.');
     } finally {
       setLoading(false);
@@ -57,12 +79,13 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.logo}>KarigarUstaad</Text>
+          <Text style={styles.logo}>🔨</Text>
+          <Text style={styles.title}>KarigarUstaad</Text>
           <Text style={styles.subtitle}>Job Marketplace</Text>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.title}>Create Account</Text>
+          <Text style={styles.heading}>Create Account</Text>
           <Text style={styles.description}>
             Join our community of workers and employers
           </Text>
@@ -81,7 +104,7 @@ export default function RegisterScreen() {
                   role === 'worker' && styles.roleOptionTextActive,
                 ]}
               >
-                Worker
+                👷 Worker
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -97,7 +120,7 @@ export default function RegisterScreen() {
                   role === 'employer' && styles.roleOptionTextActive,
                 ]}
               >
-                Employer
+                💼 Employer
               </Text>
             </TouchableOpacity>
           </View>
@@ -116,7 +139,7 @@ export default function RegisterScreen() {
           />
 
           <Input
-            placeholder="Password"
+            placeholder="Password (minimum 6 characters)"
             value={password}
             onChangeText={setPassword}
             secureTextEntry

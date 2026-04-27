@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -7,39 +7,69 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { dummyJobs } from '@/src/data';
+import { getAllJobs, JobItem } from '@/src/services/jobService';
+import { getMe, UserProfile } from '@/src/services/userService';
 
 export default function WorkerDashboardScreen() {
   const router = useRouter();
-  const pendingJobs = dummyJobs.filter((j) => j.status === 'pending');
+  const [jobs, setJobs] = useState<JobItem[]>([]);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleViewJobs = () => {
-    router.push('/(worker)/available-jobs');
+  useFocusEffect(
+    React.useCallback(() => {
+      loadDashboardData();
+    }, [])
+  );
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userData = await getMe();
+      setUser(userData);
+
+      const jobsData = await getAllJobs();
+      const pendingJobs = jobsData.filter((j) => j.status === 'pending');
+      setJobs(pendingJobs);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load dashboard';
+      setError(errorMessage);
+      console.error('❌ Dashboard Error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleViewProfile = () => {
-    router.push('/(worker)/profile');
-  };
+  const handleViewJobs = () => router.push('/(worker)/available-jobs');
+  const handleViewProfile = () => router.push('/(worker)/profile');
 
-  const handleViewEarnings = () => {
-    // Navigate to earnings screen or show earnings modal
+  const handleViewEarnings = () =>
     Alert.alert('Earnings', 'Earnings feature coming soon!');
-  };
-
-  const handleViewReviews = () => {
-    // Navigate to reviews screen
+  const handleViewReviews = () =>
     Alert.alert('Reviews', 'Reviews feature coming soon!');
-  };
-
-  const handleContactSupport = () => {
-    // Navigate to support screen or open support chat
+  const handleContactSupport = () =>
     Alert.alert('Support', 'Contact support at support@karigarustaad.com');
-  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading dashboard...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -47,7 +77,9 @@ export default function WorkerDashboardScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Welcome, Hamza! 👋</Text>
+            <Text style={styles.greeting}>
+              Welcome, {user?.name || 'Worker'}! 👋
+            </Text>
             <Text style={styles.subtitle}>Service Provider</Text>
           </View>
           <TouchableOpacity
@@ -58,30 +90,50 @@ export default function WorkerDashboardScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Error */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
+
         {/* Earnings Card */}
         <Card style={styles.earningsCard}>
           <View style={styles.earningsHeader}>
             <Text style={styles.earningsLabel}>Total Earnings</Text>
-            <TouchableOpacity>
-              <Text style={styles.earningsIcon}>📊</Text>
-            </TouchableOpacity>
+            <Text style={styles.earningsIcon}>📊</Text>
           </View>
-          <Text style={styles.earningsAmount}>Rs. 25,000</Text>
-          <Text style={styles.earningsSubtext}>This month</Text>
+
+          <Text style={styles.earningsAmount}>
+            Rs. {user?.wallet?.balance || 0}
+          </Text>
+          <Text style={styles.earningsSubtext}>Available Balance</Text>
+
           <View style={styles.earningsDivider} />
+
           <View style={styles.earningsStats}>
             <View style={styles.earningsStat}>
-              <Text style={styles.earningsStatValue}>45</Text>
+              <Text style={styles.earningsStatValue}>
+                {user?.completedJobs || 0}
+              </Text>
               <Text style={styles.earningsStatLabel}>Jobs Done</Text>
             </View>
+
             <View style={styles.earningsStatDivider} />
+
             <View style={styles.earningsStat}>
-              <Text style={styles.earningsStatValue}>Rs. 556</Text>
-              <Text style={styles.earningsStatLabel}>Avg/Job</Text>
+              <Text style={styles.earningsStatValue}>
+                {user?.wallet?.pending || 0}
+              </Text>
+              <Text style={styles.earningsStatLabel}>Pending</Text>
             </View>
+
             <View style={styles.earningsStatDivider} />
+
             <View style={styles.earningsStat}>
-              <Text style={styles.earningsStatValue}>4.8⭐</Text>
+              <Text style={styles.earningsStatValue}>
+                {user?.rating ? user.rating.toFixed(1) : '0.0'}⭐
+              </Text>
               <Text style={styles.earningsStatLabel}>Rating</Text>
             </View>
           </View>
@@ -89,31 +141,44 @@ export default function WorkerDashboardScreen() {
 
         {/* Quick Actions */}
         <View style={styles.quickActionsContainer}>
-          <TouchableOpacity style={styles.quickActionButton} onPress={handleViewEarnings}>
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={handleViewEarnings}
+          >
             <Text style={styles.quickActionIcon}>📈</Text>
             <Text style={styles.quickActionText}>Earnings</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionButton} onPress={handleViewReviews}>
+
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={handleViewReviews}
+          >
             <Text style={styles.quickActionIcon}>⭐</Text>
             <Text style={styles.quickActionText}>Reviews</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickActionButton} onPress={handleContactSupport}>
+
+          <TouchableOpacity
+            style={styles.quickActionButton}
+            onPress={handleContactSupport}
+          >
             <Text style={styles.quickActionIcon}>📞</Text>
             <Text style={styles.quickActionText}>Support</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Available Jobs Section */}
+        {/* Jobs */}
         <View style={styles.sectionContainer}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Available Jobs</Text>
+            <Text style={styles.sectionTitle}>
+              Available Jobs ({jobs.length})
+            </Text>
             <TouchableOpacity onPress={handleViewJobs}>
               <Text style={styles.seeAll}>View All</Text>
             </TouchableOpacity>
           </View>
 
-          {pendingJobs.length > 0 ? (
-            pendingJobs.slice(0, 2).map((job) => (
+          {jobs.length > 0 ? (
+            jobs.slice(0, 2).map((job) => (
               <TouchableOpacity
                 key={job.id}
                 onPress={() =>
@@ -127,16 +192,22 @@ export default function WorkerDashboardScreen() {
                   <View style={styles.jobPreviewHeader}>
                     <View style={styles.jobPreviewContent}>
                       <Text style={styles.jobPreviewTitle}>{job.title}</Text>
-                      <Text style={styles.jobPreviewLocation}>📍 {job.location}</Text>
+                      <Text style={styles.jobPreviewLocation}>
+                        📍 {job.location}
+                      </Text>
                     </View>
-                    <Text style={styles.jobPreviewBudget}>Rs. {job.budget}</Text>
+                    <Text style={styles.jobPreviewBudget}>
+                      Rs. {job.budget}
+                    </Text>
                   </View>
                 </Card>
               </TouchableOpacity>
             ))
           ) : (
             <Card>
-              <Text style={styles.noJobsText}>No available jobs right now</Text>
+              <Text style={styles.noJobsText}>
+                No available jobs right now
+              </Text>
             </Card>
           )}
 
@@ -149,28 +220,32 @@ export default function WorkerDashboardScreen() {
           />
         </View>
 
-        {/* Skills Section */}
-        <Card style={styles.skillsCard}>
-          <Text style={styles.skillsTitle}>Your Skills</Text>
-          <View style={styles.skillsContainer}>
-            <View style={styles.skillBadge}>
-              <Text style={styles.skillBadgeText}>⚡ Electrical Work</Text>
+        {/* Skills */}
+        {user?.skills?.length ? (
+          <Card style={styles.skillsCard}>
+            <Text style={styles.skillsTitle}>Your Skills</Text>
+            <View style={styles.skillsContainer}>
+              {user.skills.slice(0, 3).map((skill, idx) => (
+                <View key={idx} style={styles.skillBadge}>
+                  <Text style={styles.skillBadgeText}>{skill}</Text>
+                </View>
+              ))}
             </View>
-            <View style={styles.skillBadge}>
-              <Text style={styles.skillBadgeText}>🔋 Installations</Text>
-            </View>
-            <View style={styles.skillBadge}>
-              <Text style={styles.skillBadgeText}>✓ Verified</Text>
-            </View>
-          </View>
-        </Card>
+          </Card>
+        ) : null}
 
-        {/* Tips Section */}
+        {/* Tips */}
         <Card style={styles.tipsCard}>
           <Text style={styles.tipsTitle}>💡 Pro Tips</Text>
-          <Text style={styles.tipText}>• Complete jobs on time to earn bonuses</Text>
-          <Text style={styles.tipText}>• Maintain high ratings for more jobs</Text>
-          <Text style={styles.tipText}>• Add more skills to get better offers</Text>
+          <Text style={styles.tipText}>
+            • Complete jobs on time to earn bonuses
+          </Text>
+          <Text style={styles.tipText}>
+            • Maintain high ratings for more jobs
+          </Text>
+          <Text style={styles.tipText}>
+            • Add more skills to get better offers
+          </Text>
         </Card>
       </ScrollView>
     </SafeAreaView>
@@ -178,27 +253,20 @@ export default function WorkerDashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
+  container: { flex: 1, backgroundColor: colors.background },
+
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 10, color: colors.textSecondary },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
+    padding: 20,
   },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
+
+  greeting: { fontSize: 24, fontWeight: '700', color: colors.text },
+  subtitle: { fontSize: 13, color: colors.textSecondary },
+
   profileButton: {
     width: 44,
     height: 44,
@@ -206,197 +274,98 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
-  profileIcon: {
-    fontSize: 20,
-  },
+
+  profileIcon: { fontSize: 20 },
+
   earningsCard: {
-    marginHorizontal: 20,
-    marginBottom: 20,
+    margin: 20,
     backgroundColor: '#E3F2FD',
     borderWidth: 1,
     borderColor: colors.primary,
   },
+
   earningsHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
   },
-  earningsLabel: {
-    fontSize: 13,
-    color: colors.textSecondary,
-  },
-  earningsIcon: {
-    fontSize: 18,
-  },
-  earningsAmount: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  earningsSubtext: {
-    fontSize: 12,
-    color: colors.textSecondary,
-    marginBottom: 12,
-  },
+
+  earningsLabel: { fontSize: 13, color: colors.textSecondary },
+  earningsIcon: { fontSize: 18 },
+  earningsAmount: { fontSize: 36, fontWeight: '700', color: colors.primary },
+
+  earningsSubtext: { fontSize: 12, color: colors.textSecondary },
+
   earningsDivider: {
     height: 1,
     backgroundColor: colors.primary,
     opacity: 0.2,
-    marginBottom: 12,
+    marginVertical: 10,
   },
-  earningsStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-  },
-  earningsStat: {
-    alignItems: 'center',
-  },
-  earningsStatDivider: {
-    width: 1,
-    height: 30,
-    backgroundColor: colors.primary,
-    opacity: 0.2,
-  },
-  earningsStatValue: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  earningsStatLabel: {
-    fontSize: 10,
-    color: colors.textSecondary,
-    marginTop: 2,
-  },
+
+  earningsStats: { flexDirection: 'row', justifyContent: 'space-around' },
+
+  earningsStat: { alignItems: 'center' },
+  earningsStatDivider: { width: 1, backgroundColor: colors.primary },
+
+  earningsStatValue: { fontWeight: '700', color: colors.primary },
+  earningsStatLabel: { fontSize: 10, color: colors.textSecondary },
+
   quickActionsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    marginBottom: 24,
     gap: 10,
   },
+
   quickActionButton: {
     flex: 1,
     backgroundColor: colors.white,
-    borderRadius: 12,
-    paddingVertical: 16,
+    padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    borderRadius: 12,
   },
-  quickActionIcon: {
-    fontSize: 24,
-    marginBottom: 6,
-  },
-  quickActionText: {
-    fontSize: 11,
-    color: colors.text,
-    fontWeight: '600',
-  },
-  sectionContainer: {
-    marginHorizontal: 20,
-    marginBottom: 24,
-  },
+
+  quickActionIcon: { fontSize: 24 },
+  quickActionText: { fontSize: 11, fontWeight: '600' },
+
+  sectionContainer: { margin: 20 },
+
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-  },
-  seeAll: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  jobPreviewCard: {
-    marginBottom: 10,
-  },
+
+  sectionTitle: { fontSize: 18, fontWeight: '700' },
+  seeAll: { color: colors.primary },
+
+  jobPreviewCard: { marginBottom: 10 },
+
   jobPreviewHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  jobPreviewContent: {
-    flex: 1,
-  },
-  jobPreviewTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 4,
-  },
-  jobPreviewLocation: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  jobPreviewBudget: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  noJobsText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  viewAllButton: {
-    marginTop: 8,
-  },
-  skillsCard: {
-    marginHorizontal: 20,
-    marginBottom: 16,
-  },
-  skillsTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  skillsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
+
+  jobPreviewTitle: { fontWeight: '600' },
+  jobPreviewLocation: { fontSize: 12, color: colors.textSecondary },
+  jobPreviewBudget: { fontWeight: '700', color: colors.primary },
+
+  noJobsText: { textAlign: 'center', color: colors.textSecondary },
+
+  viewAllButton: { marginTop: 10 },
+
+  skillsCard: { margin: 20 },
+  skillsTitle: { fontWeight: '700' },
+
+  skillsContainer: { flexDirection: 'row', gap: 8 },
   skillBadge: {
     backgroundColor: colors.accent,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    padding: 6,
     borderRadius: 6,
   },
-  skillBadgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.white,
-  },
-  tipsCard: {
-    marginHorizontal: 20,
-    marginBottom: 40,
-    backgroundColor: '#FFF3E0',
-  },
-  tipsTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 12,
-  },
-  tipText: {
-    fontSize: 12,
-    color: colors.text,
-    marginBottom: 6,
-    lineHeight: 18,
-  },
+
+  skillBadgeText: { color: colors.white },
+
+  tipsCard: { margin: 20, backgroundColor: '#FFF3E0' },
+  tipsTitle: { fontWeight: '700' },
+  tipText: { fontSize: 12 },
 });

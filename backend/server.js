@@ -10,6 +10,7 @@ const applicationRoutes = require('./routes/applicationRoutes');
 const workerRoutes = require('./routes/workerRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const walletRoutes = require('./routes/walletRoutes');
+const userRoutes = require('./routes/userRoutes');
 
 // Initialize Express app
 const app = express();
@@ -20,9 +21,14 @@ async function startServer() {
   await connectDB();
 
   const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Server started on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV}`);
+  const HOST = '0.0.0.0';
+  
+  app.listen(PORT, HOST, () => {
+    console.log(`\n✅ Server started on ${HOST}:${PORT}`);
+    console.log(`📍 Available at http://localhost:${PORT} (local machine)`);
+    console.log(`📱 For mobile/emulator, use your local IP: http://<YOUR_IP>:${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🗄️  Database: ${process.env.MONGODB_URI || 'MongoDB Connected'}\n`);
   });
 }
 
@@ -31,17 +37,33 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware
+// Enhanced request logging middleware
 app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  const start = Date.now();
+  const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+  
+  console.log(`\n📨 [${new Date().toISOString()}] ${req.method.padEnd(6)} ${req.path}`);
+  console.log(`   Client IP: ${clientIp}`);
+  
+  if (req.body && Object.keys(req.body).length > 0) {
+    console.log(`   Body: ${JSON.stringify(req.body).substring(0, 100)}...`);
+  }
+  
+  // Log response
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    const statusColor = res.statusCode >= 200 && res.statusCode < 300 ? '✅' : res.statusCode >= 300 && res.statusCode < 400 ? '🔀' : '❌';
+    console.log(`   ${statusColor} Status: ${res.statusCode} | Duration: ${duration}ms`);
+  });
+  
   next();
 });
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
-app.use('/api/workers', workerRoutes);
 app.use('/api/workers', workerRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wallet', walletRoutes);

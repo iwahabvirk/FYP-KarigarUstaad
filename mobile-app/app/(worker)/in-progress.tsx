@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
@@ -11,6 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
@@ -38,7 +38,7 @@ export default function InProgressScreen() {
   }, []);
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.2,
@@ -51,8 +51,10 @@ export default function InProgressScreen() {
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, [pulseAnim]);
+    );
+    animation.start();
+    return () => animation.stop();
+  }, []);
 
   const loadJob = async () => {
     try {
@@ -74,15 +76,20 @@ export default function InProgressScreen() {
 
     setCompleting(true);
     try {
-      await completeJob(jobId, notes.trim());
+      const result = await completeJob(jobId, notes.trim());
       setIsCompleted(true);
-      // Auto navigate after 2 seconds
+      // Navigate to job-completed screen after 1.5 seconds
       setTimeout(() => {
-        router.replace('/(worker)/dashboard');
-      }, 2000);
+        router.replace({
+          pathname: '/(worker)/job-completed',
+          params: { 
+            jobId,
+            earnings: Math.floor(job.budget * 0.9),
+          },
+        });
+      }, 1500);
     } catch (error: any) {
       Alert.alert('Error', error?.message || 'Failed to complete job');
-    } finally {
       setCompleting(false);
     }
   };

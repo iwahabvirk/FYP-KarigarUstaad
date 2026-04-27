@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Input } from '@/components/Input';
@@ -27,24 +28,44 @@ export default function PostJobScreen() {
   };
 
   const handlePostJob = async () => {
+    console.log('🛠️  Post Job: Started job posting process...');
+    
     const trimmedTitle = title.trim();
     const trimmedDescription = description.trim();
     const trimmedLocation = location.trim();
     const parsedBudget = Number(budget);
 
+    console.log('🛠️  Post Job: Form validation - inputs:', {
+      title: trimmedTitle ? '✅' : '❌',
+      description: trimmedDescription ? '✅' : '❌',
+      location: trimmedLocation ? '✅' : '❌',
+      category: category ? '✅' : '❌',
+      budget: budget ? '✅' : '❌',
+    });
+
     if (!trimmedTitle || !trimmedDescription || !trimmedLocation || !category || !budget) {
+      console.error('❌ Post Job: Missing required fields');
       Alert.alert('Missing fields', 'Please fill in all required fields.');
       return;
     }
 
     if (Number.isNaN(parsedBudget) || parsedBudget <= 0) {
+      console.error('❌ Post Job: Invalid budget:', budget);
       Alert.alert('Invalid budget', 'Budget must be a valid number greater than 0.');
       return;
     }
 
     try {
       setLoading(true);
-      await createJob({
+      console.log('🛠️  Post Job: Calling createJob API with payload:', {
+        title: trimmedTitle,
+        description: trimmedDescription.substring(0, 50) + '...',
+        budget: parsedBudget,
+        location: trimmedLocation,
+        category,
+      });
+
+      const result = await createJob({
         title: trimmedTitle,
         description: trimmedDescription,
         budget: parsedBudget,
@@ -53,16 +74,24 @@ export default function PostJobScreen() {
         requiredSkills: [category],
       });
 
+      console.log('✅ Post Job: Job created successfully with ID:', result.id);
+
       Alert.alert('Success', 'Job posted successfully.', [
         {
           text: 'OK',
           onPress: () => {
+            console.log('🛠️  Post Job: Resetting form and navigating to My Jobs');
             resetForm();
-            router.replace('/(customer)/home');
+            router.replace('/(customer)/my-jobs');
           },
         },
       ]);
     } catch (error: any) {
+      console.error('❌ Post Job: Error creating job:', {
+        message: error?.message,
+        status: error?.response?.status,
+        data: error?.response?.data,
+      });
       Alert.alert('Error', error?.message || 'Unable to post the job.');
     } finally {
       setLoading(false);

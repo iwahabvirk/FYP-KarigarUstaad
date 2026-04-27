@@ -1,24 +1,64 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TextInput,
   ScrollView,
   TouchableOpacity,
   FlatList,
   Image,
+  ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
-import { dummyCategories, getFeaturedWorkers } from '@/src/data';
+import { getMe, UserProfile, getRecommendedWorkers, RecommendedWorker } from '@/src/services/userService';
+
+const CATEGORIES = [
+  { id: '1', name: 'Electrician', icon: '⚡' },
+  { id: '2', name: 'Plumber', icon: '🔧' },
+  { id: '3', name: 'Painter', icon: '🎨' },
+  { id: '4', name: 'Carpenter', icon: '🪵' },
+  { id: '5', name: 'AC Repair', icon: '❄️' },
+];
 
 export default function CustomerHomeScreen() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
-  const featuredWorkers = getFeaturedWorkers();
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [recommendedWorkers, setRecommendedWorkers] = useState<RecommendedWorker[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadHomeData();
+    }, []),
+  );
+
+  const loadHomeData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch user profile
+      const userData = await getMe();
+      setUser(userData);
+
+      // Fetch recommended workers (using Electrician as default category)
+      const workers = await getRecommendedWorkers('Electrician', userData.location || 'Lahore');
+      setRecommendedWorkers(workers);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load home data';
+      console.error('❌ Home Error:', err);
+      // Don't set error state - show cached data or continue with empty state
+      setRecommendedWorkers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCategoryPress = (categoryName: string) => {
     router.push({
@@ -44,8 +84,8 @@ export default function CustomerHomeScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.greeting}>Hi, Rahul! 👋</Text>
-            <Text style={styles.location}>📍 DHA Lahore, Lahore</Text>
+            <Text style={styles.greeting}>Hi, {user?.name || 'Customer'}! 👋</Text>
+            <Text style={styles.location}>📍 {user?.location || 'DHA Lahore, Lahore'}</Text>
           </View>
           <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
             <Text style={styles.profileIcon}>👤</Text>
@@ -93,36 +133,48 @@ export default function CustomerHomeScreen() {
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={featuredWorkers}
-            keyExtractor={(item) => item.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.recommendationCard}
-                onPress={() => handleWorkerPress(item.id)}
-              >
-                <View style={styles.recommendationImageBox}>
-                  <Text style={styles.workerInitial}>
-                    {item.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={colors.primary} />
+            </View>
+          ) : recommendedWorkers.length > 0 ? (
+            <FlatList
+              data={recommendedWorkers}
+              keyExtractor={(item, idx) => `${item.name}-${idx}`}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <TouchableOpacity
+                  style={styles.recommendationCard}
+                  onPress={() => handleWorkerPress(`${item.name}`)}
+                >
+                  <View style={styles.recommendationImageBox}>
+                    <Text style={styles.workerInitial}>
+                      {item.name
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </Text>
+                  </View>
+                  <Text style={styles.recommendationName} numberOfLines={1}>
+                    {item.name}
                   </Text>
-                </View>
-                <Text style={styles.recommendationName} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <View style={styles.ratingBadge}>
-                  <Text style={styles.rating}>⭐ {item.rating}</Text>
-                </View>
-                <Text style={styles.recommendationCategory}>{item.category}</Text>
-                <Text style={styles.recommendationPrice}>Rs. {item.price}</Text>
-              </TouchableOpacity>
-            )}
-            contentContainerStyle={styles.recommendationsList}
-          />
+                  <View style={styles.ratingBadge}>
+                    <Text style={styles.rating}>⭐ {item.rating.toFixed(1)}</Text>
+                  </View>
+                  <Text style={styles.recommendationCategory} numberOfLines={1}>
+                    {item.skills?.[0] || 'Services'}
+                  </Text>
+                  <Text style={styles.recommendationPrice}>Score: {item.score.toFixed(1)}</Text>
+                </TouchableOpacity>
+              )}
+              contentContainerStyle={styles.recommendationsList}
+            />
+          ) : (
+            <View style={styles.emptyRecommendations}>
+              <Text style={styles.emptyText}>No recommendations available</Text>
+            </View>
+          )}
         </View>
 
         {/* Categories Grid */}
@@ -132,7 +184,7 @@ export default function CustomerHomeScreen() {
           </View>
 
           <View style={styles.categoriesGrid}>
-            {dummyCategories.map((category) => (
+            {CATEGORIES.map((category) => (
               <TouchableOpacity
                 key={category.id}
                 style={styles.categoryCard}
@@ -282,6 +334,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.primary,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyRecommendations: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: colors.textSecondary,
   },
   recommendationsList: {
     paddingHorizontal: 20,

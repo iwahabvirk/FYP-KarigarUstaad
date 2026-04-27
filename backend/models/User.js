@@ -30,6 +30,10 @@ const userSchema = new mongoose.Schema(
       enum: ['worker', 'employer', 'customer'],
       required: [true, 'Please select a role'],
     },
+    phone: {
+      type: String,
+      default: '',
+    },
     skills: [
       {
         type: String,
@@ -43,6 +47,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    bio: {
+      type: String,
+      default: '',
+    },
+    profileImage: {
+      type: String,
+      default: null,
+    },
     rating: {
       type: Number,
       default: 0,
@@ -50,6 +62,10 @@ const userSchema = new mongoose.Schema(
       max: 5,
     },
     totalReviews: {
+      type: Number,
+      default: 0,
+    },
+    completedJobs: {
       type: Number,
       default: 0,
     },
@@ -62,41 +78,6 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: 0,
       },
-    },
-    completedJobs: {
-      type: Number,
-      default: 0,
-    },
-    profileImage: {
-      type: String,
-      default: null,
-    },
-    phone: {
-      type: String,
-      default: '',
-    },
-    bio: {
-      type: String,
-      default: '',
-    },
-    skills: [
-      {
-        type: String,
-      },
-    ],
-    experience: {
-      type: String,
-      default: '',
-    },
-    location: {
-      type: String,
-      default: '',
-    },
-    rating: {
-      type: Number,
-      default: 0,
-      min: 0,
-      max: 5,
     },
     totalReviews: {
       type: Number,

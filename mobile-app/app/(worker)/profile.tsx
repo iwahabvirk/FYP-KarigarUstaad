@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
@@ -56,8 +56,16 @@ export default function WorkerProfileScreen() {
       {
         text: 'Logout',
         onPress: async () => {
-          await logoutUser();
-          router.replace('/(auth)/login');
+          try {
+            console.log('🔑 Profile: Starting logout process...');
+            await logoutUser();
+            console.log('✅ Profile: Logout successful, redirecting to login...');
+            // Use router.replace to prevent going back
+            router.replace('/(auth)/login');
+          } catch (error) {
+            console.error('❌ Profile: Logout failed', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+          }
         },
       },
     ]);

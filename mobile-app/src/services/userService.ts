@@ -2,17 +2,18 @@ import { api } from './api';
 
 export interface UserProfile {
   id: string;
+  _id?: string;
   name: string;
   email: string;
   role: 'worker' | 'employer' | 'customer';
   profileImage?: string;
-  phone: string;
-  bio: string;
-  skills: string[];
-  experience: string;
-  location: string;
-  rating: number;
-  totalReviews: number;
+  phone?: string;
+  bio?: string;
+  skills?: string[];
+  experience?: string;
+  location?: string;
+  rating?: number;
+  totalReviews?: number;
   completedJobs?: number;
   responseTime?: string;
   availability?: boolean;
@@ -24,7 +25,7 @@ export interface UserProfile {
 }
 
 export interface WorkerProfile extends UserProfile {
-  reviews: {
+  reviews?: {
     id: string;
     customer: {
       id: string;
@@ -41,7 +42,7 @@ export interface WorkerProfile extends UserProfile {
 }
 
 export interface CustomerProfile extends UserProfile {
-  recentBookings: {
+  recentBookings?: {
     id: string;
     worker: {
       id: string;
@@ -57,24 +58,64 @@ export interface CustomerProfile extends UserProfile {
   }[];
 }
 
+// Helper to normalize user response
+const normalizeUser = (user: any): UserProfile => {
+  if (!user.id && user._id) {
+    user.id = user._id;
+  }
+  return user as UserProfile;
+};
+
 export const getMe = async (): Promise<UserProfile> => {
-  const response = await api.get<{ success: boolean; data: UserProfile }>('/users/me');
-  return response.data.data;
+  console.log('👤 UserService: Fetching current user profile...');
+  try {
+    const response = await api.get<{ success: boolean; data: UserProfile }>('/users/me');
+    const normalizedUser = normalizeUser(response.data.data);
+    console.log(`✅ UserService: Got user profile for ${normalizedUser.name}`);
+    return normalizedUser;
+  } catch (error) {
+    console.error('❌ UserService: Failed to fetch user profile', error);
+    throw error;
+  }
 };
 
 export const updateMe = async (updates: Partial<UserProfile>): Promise<UserProfile> => {
-  const response = await api.put<{ success: boolean; data: UserProfile }>('/users/me', updates);
-  return response.data.data;
+  console.log('👤 UserService: Updating user profile...', Object.keys(updates));
+  try {
+    const response = await api.put<{ success: boolean; data: UserProfile }>('/users/me', updates);
+    const normalizedUser = normalizeUser(response.data.data);
+    console.log('✅ UserService: User profile updated successfully');
+    return normalizedUser;
+  } catch (error) {
+    console.error('❌ UserService: Failed to update user profile', error);
+    throw error;
+  }
 };
 
 export const getWorkerProfile = async (id: string): Promise<WorkerProfile> => {
-  const response = await api.get<{ success: boolean; data: WorkerProfile }>(`/users/worker/${id}`);
-  return response.data.data;
+  console.log(`👤 UserService: Fetching worker profile for ${id}...`);
+  try {
+    const response = await api.get<{ success: boolean; data: WorkerProfile }>(`/users/worker/${id}`);
+    const normalizedUser = normalizeUser(response.data.data);
+    console.log('✅ UserService: Got worker profile');
+    return normalizedUser as WorkerProfile;
+  } catch (error) {
+    console.error('❌ UserService: Failed to fetch worker profile', error);
+    throw error;
+  }
 };
 
 export const getCustomerProfile = async (): Promise<CustomerProfile> => {
-  const response = await api.get<{ success: boolean; data: CustomerProfile }>('/users/me');
-  return response.data.data;
+  console.log('👤 UserService: Fetching customer profile...');
+  try {
+    const response = await api.get<{ success: boolean; data: CustomerProfile }>('/users/me');
+    const normalizedUser = normalizeUser(response.data.data);
+    console.log('✅ UserService: Got customer profile');
+    return normalizedUser as CustomerProfile;
+  } catch (error) {
+    console.error('❌ UserService: Failed to fetch customer profile', error);
+    throw error;
+  }
 };
 
 export interface RecommendedWorker {
@@ -87,6 +128,15 @@ export interface RecommendedWorker {
 }
 
 export const getRecommendedWorkers = async (category: string, location: string): Promise<RecommendedWorker[]> => {
-  const response = await api.get<{ success: boolean; data: RecommendedWorker[] }>(`/workers/recommend?category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`);
-  return response.data.data;
+  console.log('👤 UserService: Fetching recommended workers...', { category, location });
+  try {
+    const response = await api.get<{ success: boolean; data: RecommendedWorker[] }>(
+      `/workers/recommend?category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`
+    );
+    console.log(`✅ UserService: Got ${response.data.data.length} recommended workers`);
+    return response.data.data;
+  } catch (error) {
+    console.error('❌ UserService: Failed to fetch recommended workers', error);
+    throw error;
+  }
 };

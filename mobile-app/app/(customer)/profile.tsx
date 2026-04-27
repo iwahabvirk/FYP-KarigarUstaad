@@ -45,8 +45,16 @@ export default function CustomerProfileScreen() {
       {
         text: 'Logout',
         onPress: async () => {
-          await logoutUser();
-          router.replace('/(auth)/login');
+          try {
+            console.log('🔑 Profile: Starting logout process...');
+            await logoutUser();
+            console.log('✅ Profile: Logout successful, redirecting to login...');
+            // Use router.replace to prevent going back
+            router.replace('/(auth)/login');
+          } catch (error) {
+            console.error('❌ Profile: Logout failed', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+          }
         },
       },
     ]);

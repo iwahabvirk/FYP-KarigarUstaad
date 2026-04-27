@@ -3,11 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Alert,
   Animated,
+  ScrollView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
@@ -30,7 +31,7 @@ export default function LiveTrackingScreen() {
   }, []);
 
   useEffect(() => {
-    Animated.loop(
+    const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(scaleAnim, {
           toValue: 1.2,
@@ -43,8 +44,10 @@ export default function LiveTrackingScreen() {
           useNativeDriver: true,
         }),
       ]),
-    ).start();
-  }, [scaleAnim]);
+    );
+    animation.start();
+    return () => animation.stop();
+  }, []);
 
   const handleComplete = async () => {
     setMarking(true);
@@ -96,7 +99,7 @@ export default function LiveTrackingScreen() {
         </View>
       </View>
 
-      <View style={styles.content}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Card style={styles.statusCard}>
           <Text style={styles.statusLabel}>Current Status</Text>
           <Animated.View
@@ -147,7 +150,7 @@ export default function LiveTrackingScreen() {
         <View style={styles.buttonContainer}>
           {!jobCompleted ? (
             <Button
-              label={marking ? 'Processing...' : 'Mark as Arrived'}
+              label={marking ? 'Processing...' : 'Mark as Completed'}
               onPress={handleComplete}
               size="large"
               disabled={marking}
@@ -182,7 +185,7 @@ export default function LiveTrackingScreen() {
             </View>
           )}
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }

@@ -1,24 +1,75 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
-import { getJobById } from '@/src/data';
+import { getJobById, acceptJob } from '@/src/services/jobService';
 
 export default function JobDetailsScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const jobId = params.jobId as string;
-  const job = getJobById(jobId);
+  const [accepting, setAccepting] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [job, setJob] = useState<any>(null);
+
+  console.log('👷 Job Details Screen: Mounted with params:', { jobId, allParams: params });
+
+  React.useEffect(() => {
+    console.log('👷 Job Details Screen: useEffect triggered, jobId:', jobId);
+    loadJobDetails();
+  }, [jobId]);
+
+  const loadJobDetails = async () => {
+    console.log('👷 Job Details Screen: Loading job details for jobId:', jobId);
+    try {
+      if (!jobId) {
+        console.error('❌ Job Details Screen: No jobId provided!');
+        Alert.alert('Error', 'No job ID provided');
+        setLoading(false);
+        return;
+      }
+
+      console.log('👷 Job Details Screen: Fetching job from API...');
+      const jobData = await getJobById(jobId);
+      console.log('✅ Job Details Screen: Job loaded successfully:', {
+        id: jobData.id,
+        title: jobData.title,
+        budget: jobData.budget,
+      });
+      setJob(jobData);
+    } catch (error: any) {
+      console.error('❌ Job Details Screen: Failed to load job', {
+        jobId,
+        error: error?.message,
+        status: error?.response?.status,
+      });
+      Alert.alert('Error', error?.message || 'Failed to load job details');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading job details...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!job) {
     return (
@@ -28,17 +79,47 @@ export default function JobDetailsScreen() {
     );
   }
 
-  const handleAcceptJob = () => {
-    Alert.alert('Job Accepted!', `You've accepted "${job.title}". You'll start earning money when you complete it.`);
-    router.push({
-      pathname: '/(worker)/in-progress',
-      params: { jobId },
-    });
+  const handleAcceptJob = async () => {
+    console.log('👷 Job Details Screen: Accepting job:', { jobId, jobTitle: job.title });
+    setAccepting(true);
+    try {
+      const result = await acceptJob(jobId);
+      console.log('✅ Job Details Screen: Job accepted successfully:', {
+        jobId,
+        message: result.message,
+      });
+
+      Alert.alert('Success', `You've accepted "${job.title}". You'll start working on this job now.`, [
+        {
+          text: 'Go to In Progress',
+          onPress: () => {
+            console.log('👷 Job Details Screen: Navigating to in-progress screen');
+            setAccepting(false);
+            router.replace({
+              pathname: '/(worker)/in-progress',
+              params: { jobId },
+            });
+          },
+        },
+      ]);
+    } catch (error: any) {
+      console.error('❌ Job Details Screen: Failed to accept job', {
+        jobId,
+        error: error?.message,
+        status: error?.response?.status,
+      });
+      Alert.alert('Error', error?.message || 'Failed to accept job. Please try again.');
+      setAccepting(false);
+    }
   };
 
   const handleRejectJob = () => {
-    Alert.alert('Job Rejected', 'You can find other jobs in the available jobs list.');
-    router.back();
+    Alert.alert('Job Declined', 'You can find other jobs in the available jobs list.', [
+      {
+        text: 'OK',
+        onPress: () => router.back(),
+      },
+    ]);
   };
 
   return (
@@ -118,17 +199,19 @@ export default function JobDetailsScreen() {
 
       <View style={styles.footer}>
         <Button
-          label="Accept Job"
+          label={accepting ? "Accepting..." : "Accept Job"}
           onPress={handleAcceptJob}
           variant="primary"
           size="large"
           style={styles.acceptButton}
+          disabled={accepting}
         />
         <Button
           label="Decline"
           onPress={handleRejectJob}
           variant="outline"
           size="large"
+          disabled={accepting}
         />
       </View>
     </SafeAreaView>
@@ -307,5 +390,16 @@ const styles = StyleSheet.create({
   },
   acceptButton: {
     marginBottom: 0,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: colors.text,
+    fontWeight: '600',
   },
 });

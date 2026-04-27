@@ -25,7 +25,7 @@ const jobSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Electrician', 'Plumber', 'Painter', 'AC Technician', 'Carpenter', 'Carpentry', 'Tiling', 'Installation', 'Other'],
+      enum: ['Plumbing', 'Electrical', 'Painting', 'Carpentry', 'Cleaning', 'Installation', 'Repair', 'Other'],
       required: [true, 'Please provide a category'],
       default: 'Other',
     },
@@ -34,9 +34,14 @@ const jobSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    assignedWorker: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'in_progress', 'completed', 'paid'],
+      enum: ['pending', 'in_progress', 'arrived', 'completed', 'paid', 'cancelled'],
       default: 'pending',
     },
     requiredSkills: [

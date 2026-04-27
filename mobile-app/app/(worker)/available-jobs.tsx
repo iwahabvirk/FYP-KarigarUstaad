@@ -1,20 +1,49 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   FlatList,
   TouchableOpacity,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
-import { dummyJobs } from '@/src/data';
+import { getAllJobs, JobItem } from '@/src/services/jobService';
 
 export default function AvailableJobsScreen() {
   const router = useRouter();
-  const availableJobs = dummyJobs.filter((j) => j.status === 'pending');
+  const [jobs, setJobs] = useState<JobItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log('👀 AvailableJobsScreen: Screen focused, fetching jobs...');
+      fetchAvailableJobs();
+    }, [])
+  );
+
+  const fetchAvailableJobs = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAllJobs();
+      const availableJobs = data.filter((j) => j.status === 'pending');
+      console.log(`✅ AvailableJobsScreen: Got ${availableJobs.length} available jobs`);
+      setJobs(availableJobs);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load jobs';
+      setError(errorMessage);
+      console.error('❌ AvailableJobsScreen: Error', errorMessage);
+      Alert.alert('Error', errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleJobPress = (jobId: string) => {
     router.push({
@@ -23,7 +52,7 @@ export default function AvailableJobsScreen() {
     });
   };
 
-  const renderJobCard = ({ item }: { item: (typeof dummyJobs)[0] }) => (
+  const renderJobCard = ({ item }: { item: JobItem }) => (
     <TouchableOpacity
       onPress={() => handleJobPress(item.id)}
       style={styles.jobCardContainer}
@@ -51,6 +80,25 @@ export default function AvailableJobsScreen() {
     </TouchableOpacity>
   );
 
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()}>
+            <Text style={styles.backButton}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Available Jobs</Text>
+          <TouchableOpacity>
+            <Text style={styles.filterIcon}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={[styles.emptyContainer, { justifyContent: 'center' }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -58,14 +106,14 @@ export default function AvailableJobsScreen() {
           <Text style={styles.backButton}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Available Jobs</Text>
-        <TouchableOpacity>
-          <Text style={styles.filterIcon}>⚙️</Text>
+        <TouchableOpacity onPress={fetchAvailableJobs}>
+          <Text style={styles.filterIcon}>🔄</Text>
         </TouchableOpacity>
       </View>
 
       <View style={styles.filterContainer}>
         <TouchableOpacity style={styles.filterChip}>
-          <Text style={styles.filterChipText}>All ({availableJobs.length})</Text>
+          <Text style={styles.filterChipText}>All ({jobs.length})</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.filterChip}>
           <Text style={styles.filterChipText}>Near Me</Text>
@@ -75,9 +123,18 @@ export default function AvailableJobsScreen() {
         </TouchableOpacity>
       </View>
 
-      {availableJobs.length > 0 ? (
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity onPress={fetchAvailableJobs} style={styles.retryButton}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {jobs.length > 0 ? (
         <FlatList
-          data={availableJobs}
+          data={jobs}
           keyExtractor={(item) => item.id}
           renderItem={renderJobCard}
           contentContainerStyle={styles.listContent}
@@ -201,6 +258,33 @@ const styles = StyleSheet.create({
   difficultyText: {
     fontSize: 11,
     color: '#FF9800',
+    fontWeight: '600',
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    borderLeftWidth: 4,
+    borderLeftColor: '#D32F2F',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginHorizontal: 20,
+    marginVertical: 12,
+    borderRadius: 4,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#D32F2F',
+    marginBottom: 8,
+  },
+  retryButton: {
+    backgroundColor: '#D32F2F',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  retryButtonText: {
+    fontSize: 12,
+    color: 'white',
     fontWeight: '600',
   },
   emptyContainer: {

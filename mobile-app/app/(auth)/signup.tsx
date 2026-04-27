@@ -19,21 +19,37 @@ export default function SignupScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSignup = async () => {
+  const handleContinue = async () => {
     if (!name || !email || !password) {
       Alert.alert('Validation', 'Please complete all fields');
       return;
     }
 
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Validation', 'Please enter a valid email address');
+      return;
+    }
+
+    // Validate password length
+    if (password.length < 6) {
+      Alert.alert('Validation', 'Password must be at least 6 characters');
+      return;
+    }
+
     try {
-      setLoading(true);
-      // Simulate signup
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.replace('/(auth)/role-selection');
+      // Store temp user data and navigate to role selection
+      router.push({
+        pathname: '/(auth)/select-role',
+        params: {
+          name,
+          email,
+          password,
+        },
+      });
     } catch (error: any) {
-      Alert.alert('Signup failed', error?.message || 'Unable to create account.');
-    } finally {
-      setLoading(false);
+      Alert.alert('Error', error?.message || 'Unable to proceed.');
     }
   };
 
@@ -66,15 +82,15 @@ export default function SignupScreen() {
           />
 
           <Input
-            placeholder="Password"
+            placeholder="Password (minimum 6 characters)"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
           />
 
           <Button
-            label={loading ? 'Creating account...' : 'Sign Up'}
-            onPress={handleSignup}
+            label={loading ? 'Processing...' : 'Continue'}
+            onPress={handleContinue}
             size="large"
             disabled={loading}
             style={styles.signupButton}

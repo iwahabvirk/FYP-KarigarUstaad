@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, SafeAreaView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
+import { loginUser } from '@/src/services/authService';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('ali.raza@example.com');
@@ -19,11 +21,25 @@ export default function LoginScreen() {
 
     try {
       setLoading(true);
-      // Simulate login
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      router.replace('/(auth)/role-selection');
+      console.log('🔑 LoginScreen: Attempting login with email:', email);
+      
+      const response = await loginUser({ email, password });
+      
+      console.log('✅ LoginScreen: Login successful for user:', response.user.name, 'Role:', response.user.role);
+      
+      // Navigate based on user role
+      if (response.user.role === 'worker') {
+        router.replace('/(worker)/dashboard');
+      } else if (response.user.role === 'employer') {
+        router.replace('/(employer)/dashboard');
+      } else {
+        // customer
+        router.replace('/(customer)/home');
+      }
     } catch (error: any) {
-      Alert.alert('Login failed', error?.message || 'Unable to login.');
+      console.error('❌ LoginScreen: Login failed:', error);
+      const errorMessage = error?.message || 'Unable to login. Please check your credentials.';
+      Alert.alert('Login failed', errorMessage);
     } finally {
       setLoading(false);
     }
