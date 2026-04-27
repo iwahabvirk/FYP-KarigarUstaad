@@ -1,6 +1,6 @@
 const User = require('../models/User');
 
-const CATEGORIES = ['Plumbing', 'Electrical', 'Painting', 'Carpentry', 'Cleaning', 'Installation', 'Repair', 'Other'];
+const CATEGORIES = ['plumbing','electrical','painting','cleaning','carpentry'];
 
 // Simple keyword-based AI suggestion (no ML needed for MVP)
 exports.suggestJobDetails = async (req, res) => {
@@ -19,15 +19,13 @@ exports.suggestJobDetails = async (req, res) => {
     const descLower = description.toLowerCase();
 
     // Suggest category based on keywords
-    let suggestedCategory = 'Other';
+    let suggestedCategory = 'plumbing';
     const categoryKeywords = {
-      'Plumbing': ['plumb', 'pipe', 'drain', 'leak', 'tap', 'toilet', 'sink', 'faucet', 'water'],
-      'Electrical': ['electric', 'wire', 'switch', 'outlet', 'bulb', 'light', 'panel', 'breaker', 'voltage'],
-      'Painting': ['paint', 'wall', 'color', 'brush', 'coat', 'finish', 'surface', 'repaint'],
-      'Carpentry': ['wood', 'door', 'cabinet', 'shelf', 'frame', 'furniture', 'carpen', 'build', 'construct'],
-      'Cleaning': ['clean', 'dust', 'sweep', 'mop', 'wash', 'laundry', 'sanitize', 'tidy'],
-      'Installation': ['install', 'mount', 'setup', 'assemble', 'fit', 'attach', 'place', 'arrange'],
-      'Repair': ['repair', 'fix', 'broken', 'damage', 'issue', 'problem', 'malfunction'],
+      'plumbing': ['plumb', 'pipe', 'drain', 'leak', 'tap', 'toilet', 'sink', 'faucet', 'water'],
+      'electrical': ['electric', 'wire', 'switch', 'outlet', 'bulb', 'light', 'panel', 'breaker', 'voltage'],
+      'painting': ['paint', 'wall', 'color', 'brush', 'coat', 'finish', 'surface', 'repaint'],
+      'carpentry': ['wood', 'door', 'cabinet', 'shelf', 'frame', 'furniture', 'carpen', 'build', 'construct'],
+      'cleaning': ['clean', 'dust', 'sweep', 'mop', 'wash', 'laundry', 'sanitize', 'tidy'],
     };
 
     // Find matching category
@@ -40,28 +38,22 @@ exports.suggestJobDetails = async (req, res) => {
 
     // Suggest budget based on category
     const budgetRanges = {
-      'Plumbing': { min: 2000, max: 10000, suggested: 5000 },
-      'Electrical': { min: 3000, max: 15000, suggested: 8000 },
-      'Painting': { min: 5000, max: 20000, suggested: 10000 },
-      'Carpentry': { min: 5000, max: 25000, suggested: 12000 },
-      'Cleaning': { min: 1000, max: 5000, suggested: 2500 },
-      'Installation': { min: 3000, max: 15000, suggested: 8000 },
-      'Repair': { min: 1500, max: 8000, suggested: 4000 },
-      'Other': { min: 2000, max: 10000, suggested: 5000 },
+      'plumbing': { min: 2000, max: 10000, suggested: 5000 },
+      'electrical': { min: 3000, max: 15000, suggested: 8000 },
+      'painting': { min: 5000, max: 20000, suggested: 10000 },
+      'carpentry': { min: 5000, max: 25000, suggested: 12000 },
+      'cleaning': { min: 1000, max: 5000, suggested: 2500 },
     };
 
     const budgetRange = budgetRanges[suggestedCategory];
 
     // Suggest skills based on category
     const skillSuggestions = {
-      'Plumbing': ['Pipe fitting', 'Water system repair', 'Leak detection'],
-      'Electrical': ['Wiring', 'Circuit work', 'Safety inspection'],
-      'Painting': ['Surface preparation', 'Color matching', 'Finish application'],
-      'Carpentry': ['Cutting', 'Measuring', 'Wood finishing'],
-      'Cleaning': ['Deep cleaning', 'Sanitization', 'Organization'],
-      'Installation': ['Equipment setup', 'Safety compliance', 'Testing'],
-      'Repair': ['Diagnostics', 'Problem solving', 'Component replacement'],
-      'Other': [],
+      'plumbing': ['Pipe fitting', 'Water system repair', 'Leak detection'],
+      'electrical': ['Wiring', 'Circuit work', 'Safety inspection'],
+      'painting': ['Surface preparation', 'Color matching', 'Finish application'],
+      'carpentry': ['Cutting', 'Measuring', 'Wood finishing'],
+      'cleaning': ['Deep cleaning', 'Sanitization', 'Organization'],
     };
 
     console.log('✅ AIController: Suggestions generated', {
@@ -82,6 +74,55 @@ exports.suggestJobDetails = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ AIController: Error suggesting details', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Suggest only category
+exports.suggestCategory = async (req, res) => {
+  try {
+    const { description } = req.body;
+
+    console.log('🤖 AIController: Suggesting category for description:', description.substring(0, 50) + '...');
+
+    if (!description || description.trim().length < 10) {
+      return res.status(400).json({
+        success: false,
+        message: 'Description must be at least 10 characters',
+      });
+    }
+
+    const descLower = description.toLowerCase();
+
+    // Suggest category based on keywords
+    let suggestedCategory = 'plumbing';
+    const categoryKeywords = {
+      'plumbing': ['plumb', 'pipe', 'drain', 'leak', 'tap', 'toilet', 'sink', 'faucet', 'water'],
+      'electrical': ['electric', 'wire', 'switch', 'outlet', 'bulb', 'light', 'panel', 'breaker', 'voltage'],
+      'painting': ['paint', 'wall', 'color', 'brush', 'coat', 'finish', 'surface', 'repaint'],
+      'carpentry': ['wood', 'door', 'cabinet', 'shelf', 'frame', 'furniture', 'carpen', 'build', 'construct'],
+      'cleaning': ['clean', 'dust', 'sweep', 'mop', 'wash', 'laundry', 'sanitize', 'tidy'],
+    };
+
+    // Find matching category
+    for (const [category, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some(keyword => descLower.includes(keyword))) {
+        suggestedCategory = category;
+        break;
+      }
+    }
+
+    console.log('✅ AIController: Category suggested', { category: suggestedCategory });
+
+    res.status(200).json({
+      success: true,
+      category: suggestedCategory,
+    });
+  } catch (error) {
+    console.error('❌ AIController: Error suggesting category', error.message);
     res.status(500).json({
       success: false,
       message: error.message,

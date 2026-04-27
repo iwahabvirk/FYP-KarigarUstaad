@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
+import { getCategoryLabel } from '@/constants/jobCategories';
 import { getAllJobs, JobItem } from '@/src/services/jobService';
 
 export default function AvailableJobsScreen() {
@@ -61,7 +62,7 @@ export default function AvailableJobsScreen() {
         <View style={styles.jobCardHeader}>
           <View style={styles.jobTitleColumn}>
             <Text style={styles.jobTitle}>{item.title}</Text>
-            <Text style={styles.jobCategory}>{item.category}</Text>
+            <Text style={styles.jobCategory}>{getCategoryLabel(item.category)}</Text>
           </View>
           <Text style={styles.jobBudget}>Rs. {item.budget}</Text>
         </View>

@@ -25,11 +25,22 @@ exports.createService = async (req, res) => {
       });
     }
 
+    // Normalize and validate category
+    const normalizedCategory = category?.toLowerCase().trim();
+    const validCategories = ['plumbing','electrical','painting','cleaning','carpentry'];
+    if (!validCategories.includes(normalizedCategory)) {
+      console.error('❌ ServiceController: Invalid category', { category, normalizedCategory });
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category provided',
+      });
+    }
+
     const service = await Service.create({
       title: title.trim(),
       description: description.trim(),
       price: parsedPrice,
-      category: category || 'Other',
+      category: normalizedCategory,
       worker: req.user.id,
       isActive: true,
     });

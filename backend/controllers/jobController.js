@@ -61,14 +61,25 @@ exports.createJob = async (req, res) => {
       });
     }
 
+    // Normalize and validate category
+    const normalizedCategory = category?.toLowerCase().trim();
+    const validCategories = ['plumbing','electrical','painting','cleaning','carpentry'];
+    if (!validCategories.includes(normalizedCategory)) {
+      console.error('❌ JobController: Invalid category', { category, normalizedCategory });
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid category provided',
+      });
+    }
+
     console.log('💼 JobController: Creating job in database...');
     const job = await Job.create({
       title: title.trim(),
       description: description.trim(),
       budget: parsedBudget,
       location: location.trim(),
-      category: category.trim(),
-      requiredSkills: requiredSkills || [category.trim()],
+      category: normalizedCategory,
+      requiredSkills: requiredSkills || [normalizedCategory],
       employer: customerId,
       status: 'pending',
     });

@@ -14,6 +14,8 @@ import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { createJob } from '@/src/services/jobService';
+import { JOB_CATEGORIES } from '@/constants/jobCategories';
+import { suggestCategory } from '@/src/services/aiService';
 
 export default function PostJobScreen() {
   const [title, setTitle] = useState('');
@@ -22,16 +24,27 @@ export default function PostJobScreen() {
   const [location, setLocation] = useState('');
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const router = useRouter();
 
-  const categories = [
-    'Carpentry',
-    'Painting',
-    'Electrical',
-    'Plumbing',
-    'Tiling',
-    'Installation',
-  ];
+  const handleSuggestCategory = async () => {
+    if (!description.trim()) {
+      Alert.alert('Missing description', 'Please enter a description first.');
+      return;
+    }
+
+    try {
+      setAiLoading(true);
+      const suggestedCategory = await suggestCategory(description);
+      setCategory(suggestedCategory);
+      Alert.alert('Category suggested', `Suggested: ${JOB_CATEGORIES.find(c => c.value === suggestedCategory)?.label || suggestedCategory}`);
+    } catch (error: any) {
+      console.error('Error suggesting category:', error);
+      Alert.alert('Error', 'Could not suggest category. Please select manually.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   const handlePostJob = async () => {
     if (!title || !description || !budget || !category || !location) {
@@ -79,24 +92,35 @@ export default function PostJobScreen() {
         </Card>
 
         <Card>
-          <Text style={styles.fieldLabel}>Category *</Text>
+          <View style={styles.categoryHeader}>
+            <Text style={styles.fieldLabel}>Category *</Text>
+            <TouchableOpacity
+              onPress={handleSuggestCategory}
+              disabled={aiLoading}
+              style={styles.suggestButton}
+            >
+              <Text style={[styles.suggestButtonText, aiLoading && styles.suggestButtonTextDisabled]}>
+                {aiLoading ? 'Suggesting...' : '🤖 Suggest'}
+              </Text>
+            </TouchableOpacity>
+          </View>
           <View style={styles.categoryContainer}>
-            {categories.map((cat) => (
+            {JOB_CATEGORIES.map((item) => (
               <TouchableOpacity
-                key={cat}
+                key={item.value}
                 style={[
                   styles.categoryButton,
-                  category === cat && styles.categoryButtonActive,
+                  category === item.value && styles.categoryButtonActive,
                 ]}
-                onPress={() => setCategory(cat)}
+                onPress={() => setCategory(item.value)}
               >
                 <Text
                   style={[
                     styles.categoryButtonText,
-                    category === cat && styles.categoryButtonTextActive,
+                    category === item.value && styles.categoryButtonTextActive,
                   ]}
                 >
-                  {cat}
+                  {item.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -203,6 +227,26 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.text,
     marginBottom: 12,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  suggestButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: colors.primary,
+    borderRadius: 6,
+  },
+  suggestButtonText: {
+    fontSize: 12,
+    color: colors.white,
+    fontWeight: '600',
+  },
+  suggestButtonTextDisabled: {
+    opacity: 0.6,
   },
   categoryContainer: {
     flexDirection: 'row',

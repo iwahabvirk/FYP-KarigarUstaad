@@ -298,6 +298,9 @@ const styles = StyleSheet.create({
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: 10, color: colors.textSecondary },
 
+  errorContainer: { padding: 20, backgroundColor: '#FEE', borderRadius: 8, margin: 20 },
+  errorText: { color: '#C33', textAlign: 'center' },
+
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -384,6 +387,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
+
+  jobPreviewContent: { flex: 1 },
 
   jobPreviewTitle: { fontWeight: '600' },
   jobPreviewLocation: { fontSize: 12, color: colors.textSecondary },

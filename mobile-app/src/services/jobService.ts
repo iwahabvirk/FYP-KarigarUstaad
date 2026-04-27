@@ -18,7 +18,7 @@ export interface JobItem {
   budget: number;
   location: string;
   category: string;
-  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'paid';
+  status: 'pending' | 'accepted' | 'in_progress' | 'arrived' | 'completed' | 'paid';
   requiredSkills: string[];
   applicationCount: number;
   customerId?: string;
@@ -112,7 +112,7 @@ export const createJob = async (payload: JobPayload): Promise<JobItem> => {
 
 export const updateJobStatus = async (
   jobId: string,
-  status: 'pending' | 'accepted' | 'in_progress' | 'completed' | 'paid',
+  status: 'pending' | 'accepted' | 'in_progress' | 'arrived' | 'completed' | 'paid',
 ): Promise<{ success: boolean; message: string }> => {
   console.log(`📋 JobService: Updating job ${jobId} status to ${status}...`);
   try {

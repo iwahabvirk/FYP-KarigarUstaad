@@ -85,7 +85,7 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.heading}>Create Account</Text>
+          <Text style={styles.title}>Create Account</Text>
           <Text style={styles.description}>
             Join our community of workers and employers
           </Text>

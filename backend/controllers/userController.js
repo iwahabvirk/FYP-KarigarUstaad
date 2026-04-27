@@ -110,6 +110,70 @@ exports.getRecommendedWorkers = asyncHandler(async (req, res, next) => {
   });
 });
 
+// @desc    Get recommended jobs for worker
+// @route   GET /api/jobs/recommend
+// @access  Private (Worker only)
+exports.getRecommendedJobs = asyncHandler(async (req, res, next) => {
+  const workerId = req.user.id;
+  const worker = await User.findById(workerId);
+
+  if (!worker || worker.role !== 'worker') {
+    return res.status(400).json({
+      success: false,
+      message: 'User is not a worker',
+    });
+  }
+
+  const Job = require('../models/Job');
+
+  // Find all pending jobs
+  const jobs = await Job.find({ status: 'pending' }).populate('employer', 'name location');
+
+  // Calculate scores based on worker's skills and location
+  const scoredJobs = jobs.map(job => {
+    const category = job.category;
+    const jobLocation = job.location || '';
+    const workerLocation = worker.location || '';
+    const budget = job.budget || 0;
+
+    // Skill match bonus
+    const skillMatchBonus = worker.skills && worker.skills.includes(category) ? 20 : 0;
+
+    // Location match bonus
+    const locationMatchBonus = jobLocation.toLowerCase().includes(workerLocation.toLowerCase()) ? 15 : 0;
+
+    // Budget score (higher budget = higher score)
+    const budgetScore = Math.min(budget / 100, 10); // Cap at 10 points
+
+    // Calculate total score
+    const score = skillMatchBonus + locationMatchBonus + budgetScore;
+
+    return {
+      id: job._id,
+      title: job.title,
+      description: job.description,
+      budget,
+      location: jobLocation,
+      category,
+      employer: {
+        name: job.employer.name,
+        location: job.employer.location,
+      },
+      score,
+    };
+  });
+
+  // Sort by score descending and take top 5
+  const recommendedJobs = scoredJobs
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+
+  res.status(200).json({
+    success: true,
+    data: recommendedJobs,
+  });
+});
+
 // @desc    Get worker profile with reviews
 // @route   GET /api/users/worker/:id
 // @access  Private

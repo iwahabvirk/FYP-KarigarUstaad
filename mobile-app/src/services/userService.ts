@@ -132,6 +132,32 @@ export interface RecommendedWorker {
   score: number;
 }
 
+export interface RecommendedJob {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  location: string;
+  category: string;
+  employer: {
+    name: string;
+    location: string;
+  };
+  score: number;
+}
+
+export const getRecommendedJobs = async (): Promise<RecommendedJob[]> => {
+  console.log('👤 UserService: Fetching recommended jobs...');
+  try {
+    const response = await api.get<{ success: boolean; data: RecommendedJob[] }>('/jobs/recommend');
+    console.log(`✅ UserService: Got ${response.data.data.length} recommended jobs`);
+    return response.data.data;
+  } catch (error) {
+    console.error('❌ UserService: Failed to fetch recommended jobs', error);
+    throw error;
+  }
+};
+
 export const getRecommendedWorkers = async (category: string, location: string): Promise<RecommendedWorker[]> => {
   console.log('👤 UserService: Fetching recommended workers...', { category, location });
   try {

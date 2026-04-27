@@ -163,7 +163,7 @@ export default function ServiceDetailsScreen() {
 
       <View style={styles.footer}>
         <Button
-          label={`Hire for Rs. ${service.price}`}
+          label={`Hire for ₨${service.price}`}
           onPress={handleHireWorker}
           size="large"
           style={styles.hireButton}

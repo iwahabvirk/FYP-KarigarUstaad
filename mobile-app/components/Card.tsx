@@ -71,7 +71,7 @@ export const Card: React.FC<CardProps> = ({
           transform: [{ scale: scaleAnim }],
           shadowOpacity: elevationAnim.interpolate({
             inputRange: [1, 1.5],
-            outputRange: [cardStyles.shadowOpacity || 0.1, (cardStyles.shadowOpacity || 0.1) * 1.5],
+            outputRange: [Number(cardStyles.shadowOpacity) || 0.1, (Number(cardStyles.shadowOpacity) || 0.1) * 1.5],
           }),
           elevation: elevationAnim.interpolate({
             inputRange: [1, 1.5],

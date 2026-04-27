@@ -96,7 +96,7 @@ export default function WorkerHomeScreen() {
                 id={item.id}
                 title={item.title}
                 company={item.employer?.name || 'KarigarUstaad'}
-                budget={`${item.budget}`}
+                budget={`₨${item.budget}`}
                 category={item.category}
                 onPress={() => handleJobPress(item)}
               />

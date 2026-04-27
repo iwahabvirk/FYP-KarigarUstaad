@@ -13,25 +13,15 @@ import { colors } from '@/constants/colors';
 import { Input } from '@/components/Input';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { JOB_CATEGORIES } from '@/constants/jobCategories';
 import { createService } from '@/src/services/serviceService';
-
-const categories = [
-  'Electrical',
-  'Plumbing',
-  'Painting',
-  'Carpentry',
-  'Cleaning',
-  'Installation',
-  'Repair',
-  'Other',
-];
 
 export default function PostServiceScreen() {
   const router = useRouter();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('Electrical');
+  const [category, setCategory] = useState('electrical');
   const [loading, setLoading] = useState(false);
 
   const handleCreateService = async () => {
@@ -89,13 +79,13 @@ export default function PostServiceScreen() {
         <Card>
           <Text style={styles.label}>Category</Text>
           <View style={styles.categoryWrap}>
-            {categories.map((item) => (
+            {JOB_CATEGORIES.map((item) => (
               <TouchableOpacity
-                key={item}
-                style={[styles.category, category === item && styles.categoryActive]}
-                onPress={() => setCategory(item)}
+                key={item.value}
+                style={[styles.category, category === item.value && styles.categoryActive]}
+                onPress={() => setCategory(item.value)}
               >
-                <Text style={[styles.categoryText, category === item && styles.categoryTextActive]}>{item}</Text>
+                <Text style={[styles.categoryText, category === item.value && styles.categoryTextActive]}>{item.label}</Text>
               </TouchableOpacity>
             ))}
           </View>

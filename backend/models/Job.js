@@ -25,9 +25,11 @@ const jobSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Plumbing', 'Electrical', 'Painting', 'Carpentry', 'Cleaning', 'Installation', 'Repair', 'Other'],
+      enum: ['plumbing','electrical','painting','cleaning','carpentry'],
       required: [true, 'Please provide a category'],
-      default: 'Other',
+      default: 'plumbing',
+      lowercase: true,
+      trim: true,
     },
     employer: {
       type: mongoose.Schema.Types.ObjectId,

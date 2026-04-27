@@ -4,6 +4,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { getCategoryLabel } from '@/constants/jobCategories';
 import { getMyServices, ServiceItem } from '@/src/services/serviceService';
 
 export default function ManageServicesScreen() {
@@ -57,7 +58,7 @@ export default function ManageServicesScreen() {
         renderItem={({ item }) => (
           <Card style={styles.card}>
             <Text style={styles.name}>{item.title}</Text>
-            <Text style={styles.meta}>{item.category}</Text>
+            <Text style={styles.meta}>{getCategoryLabel(item.category)}</Text>
             <Text style={styles.price}>Rs. {item.price}</Text>
             <Text style={styles.desc} numberOfLines={2}>{item.description}</Text>
           </Card>

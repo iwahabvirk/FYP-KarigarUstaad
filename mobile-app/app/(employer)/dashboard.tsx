@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { getCategoryLabel } from '@/constants/jobCategories';
 import { getMyJobs, JobItem, updateJobStatus } from '@/src/services/jobService';
 
 export default function EmployerDashboardScreen() {
@@ -102,7 +103,7 @@ export default function EmployerDashboardScreen() {
       <View style={styles.jobHeader}>
         <View style={styles.jobTitleContainer}>
           <Text style={styles.jobTitle}>{item.title}</Text>
-          <Text style={styles.jobCategory}>{item.category}</Text>
+          <Text style={styles.jobCategory}>{getCategoryLabel(item.category)}</Text>
         </View>
         <View
           style={[

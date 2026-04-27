@@ -14,11 +14,13 @@ import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { getCurrentUser, logoutUser, UserPayload } from '@/src/services/authService';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function CustomerProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<UserPayload | null>(null);
   const [loading, setLoading] = useState(true);
+  const { logout } = useAuth();
 
   useEffect(() => {
     loadUserProfile();
@@ -48,6 +50,7 @@ export default function CustomerProfileScreen() {
           try {
             console.log('🔑 Profile: Starting logout process...');
             await logoutUser();
+            logout(); // Clear auth context
             console.log('✅ Profile: Logout successful, redirecting to login...');
             // Use router.replace to prevent going back
             router.replace('/signin');

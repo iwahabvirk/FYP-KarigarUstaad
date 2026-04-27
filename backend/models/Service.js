@@ -21,8 +21,11 @@ const serviceSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['Plumbing', 'Electrical', 'Painting', 'Carpentry', 'Cleaning', 'Installation', 'Repair', 'Other'],
-      default: 'Other',
+      enum: ['plumbing','electrical','painting','cleaning','carpentry'],
+      required: [true, 'Please provide a category'],
+      default: 'plumbing',
+      lowercase: true,
+      trim: true,
     },
     worker: {
       type: mongoose.Schema.Types.ObjectId,

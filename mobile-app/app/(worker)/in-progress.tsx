@@ -15,6 +15,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { getCategoryLabel } from '@/constants/jobCategories';
 import { getJobById, completeJob, getWorkerJobs } from '@/src/services/jobService';
 
 export default function InProgressScreen() {
@@ -203,7 +204,7 @@ export default function InProgressScreen() {
           <View style={styles.divider} />
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Category</Text>
-            <Text style={styles.detailValue}>{job.category}</Text>
+            <Text style={styles.detailValue}>{getCategoryLabel(job.category)}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.detailRow}>

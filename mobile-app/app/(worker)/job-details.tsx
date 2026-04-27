@@ -13,6 +13,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
+import { getCategoryLabel } from '@/constants/jobCategories';
 import { getJobById, acceptJob } from '@/src/services/jobService';
 
 export default function JobDetailsScreen() {
@@ -129,7 +130,7 @@ export default function JobDetailsScreen() {
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Card style={styles.headerCard}>
           <Text style={styles.jobTitle}>{job.title}</Text>
-          <Text style={styles.jobCategory}>{job.category}</Text>
+          <Text style={styles.jobCategory}>{getCategoryLabel(job.category)}</Text>
           <View style={styles.budgetContainer}>
             <Text style={styles.budgetLabel}>Budget</Text>
             <Text style={styles.budgetAmount}>Rs. {job.budget}</Text>

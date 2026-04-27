@@ -168,7 +168,7 @@ export default function PaymentScreen() {
 
       <View style={styles.footer}>
         <Button
-          label={processing ? 'Processing...' : `Pay ₹${totalAmount}`}
+          label={processing ? 'Processing...' : `Pay ₨${totalAmount}`}
           onPress={handlePayment}
           size="large"
           disabled={processing}

@@ -6,12 +6,14 @@ import { colors } from '@/constants/colors';
 import { Input } from '@/components/Input';
 import { Button } from '@/components/Button';
 import { loginUser } from '@/src/services/authService';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function LoginScreen() {
-  const [email, setEmail] = useState('ali.raza@example.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('test123');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -24,6 +26,9 @@ export default function LoginScreen() {
       console.log('🔑 LoginScreen: Attempting login with email:', email);
       
       const response = await loginUser({ email, password });
+      
+      // Update auth context
+      login(response.user, response.token);
       
       console.log('✅ LoginScreen: Login successful for user:', response.user.name, 'Role:', response.user.role);
       

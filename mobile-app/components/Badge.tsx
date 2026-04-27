@@ -85,7 +85,7 @@ const getTextStyle = (
   return {
     ...sizeStyles[size],
     ...variantStyles[variant],
-    fontWeight: '600',
+    fontWeight: '600' as const,
     letterSpacing: 0.3,
   };
 };

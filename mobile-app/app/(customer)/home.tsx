@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { colors } from '@/constants/colors';
 import { Card } from '@/components/Card';
+import { AuthGuard } from '@/src/components/AuthGuard';
 import { getMe, UserProfile, getRecommendedWorkers, RecommendedWorker } from '@/src/services/userService';
 
 const CATEGORIES = [
@@ -95,18 +96,19 @@ export default function CustomerHomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hi, {user?.name || 'Customer'}! 👋</Text>
-            <Text style={styles.location}>📍 {user?.location || 'DHA Lahore, Lahore'}</Text>
+    <AuthGuard requiredRole="customer">
+      <SafeAreaView style={styles.container}>
+        <ScrollView showsVerticalScrollIndicator={false}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.greeting}>Hi, {user?.name || 'Customer'}! 👋</Text>
+              <Text style={styles.location}>📍 {user?.location || 'DHA Lahore, Lahore'}</Text>
+            </View>
+            <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
+              <Text style={styles.profileIcon}>👤</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.profileButton} onPress={handleProfilePress}>
-            <Text style={styles.profileIcon}>👤</Text>
-          </TouchableOpacity>
-        </View>
 
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -169,12 +171,12 @@ export default function CustomerHomeScreen() {
                   onPress={() => handleWorkerPress(`${item.name}`)}
                 >
                   <View style={styles.recommendationImageBox}>
-                    <Text style={styles.workerInitial}>
-                      {item.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')}
-                    </Text>
+                      <Text style={styles.workerInitial}>
+                        {item.name
+                          .split(' ')
+                          .map((n: string) => n[0])
+                          .join('')}
+                      </Text>
                   </View>
                   <Text style={styles.recommendationName} numberOfLines={1}>
                     {item.name}
@@ -248,6 +250,7 @@ export default function CustomerHomeScreen() {
         </Card>
       </ScrollView>
     </SafeAreaView>
+    </AuthGuard>
   );
 }
 

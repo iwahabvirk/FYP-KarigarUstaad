@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors } from '@/constants/colors';
 import { Card } from './Card';
+import { getCategoryLabel } from '@/constants/jobCategories';
 
 interface JobCardProps {
   id: string;
@@ -31,7 +32,7 @@ export const JobCard: React.FC<JobCardProps> = ({
             <Text style={styles.company}>{company}</Text>
           </View>
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{category}</Text>
+            <Text style={styles.badgeText}>{getCategoryLabel(category)}</Text>
           </View>
         </View>
         <View style={styles.footer}>

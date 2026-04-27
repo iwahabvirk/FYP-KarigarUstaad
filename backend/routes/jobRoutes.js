@@ -15,11 +15,13 @@ const {
 } = require('../controllers/jobController');
 const { applyJob } = require('../controllers/applicationController');
 const { payForJob } = require('../controllers/walletController');
+const { getRecommendedJobs } = require('../controllers/userController');
 const { protect, authorizeRoles } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Protected routes - MUST come before :id routes
+router.get('/recommend', protect, authorizeRoles('worker'), getRecommendedJobs);
 router.post('/', protect, authorizeRoles('employer', 'customer'), createJob);
 router.get('/my', protect, authorizeRoles('employer', 'customer'), getMyJobs);
 router.get('/worker/my', protect, authorizeRoles('worker'), getWorkerJobs);
