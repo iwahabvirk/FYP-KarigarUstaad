@@ -164,12 +164,20 @@ export default function JobDetailsScreen() {
           <Text style={styles.sectionTitle}>Customer Info</Text>
           <View style={styles.customerInfo}>
             <View style={styles.customerAvatar}>
-              <Text style={styles.customerAvatarText}>JD</Text>
+              <Text style={styles.customerAvatarText}>
+                {job.customer?.name
+                  ? job.customer.name
+                      .split(' ')
+                      .map((word: string) => word.charAt(0))
+                      .join('')
+                      .toUpperCase()
+                  : 'CU'}
+              </Text>
             </View>
             <View style={styles.customerDetails}>
-              <Text style={styles.customerName}>Arooj Fatima</Text>
-              <Text style={styles.customerRating}>⭐ 4.5 (23 reviews)</Text>
-              <Text style={styles.customerType}>First time on platform</Text>
+              <Text style={styles.customerName}>{job.customer?.name || 'Customer'}</Text>
+              <Text style={styles.customerContact}>{job.customer?.phone || 'No contact available'}</Text>
+              <Text style={styles.customerContact}>{job.customer?.email || 'No email available'}</Text>
             </View>
           </View>
         </Card>
@@ -328,6 +336,11 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
+  },
+  customerContact: {
+    fontSize: 12,
+    color: colors.textSecondary,
+    marginTop: 4,
   },
   customerRating: {
     fontSize: 12,

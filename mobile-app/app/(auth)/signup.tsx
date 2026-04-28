@@ -6,6 +6,7 @@ import {
   ScrollView,
   SafeAreaView,
   Alert,
+  Image,
 } from 'react-native';
 import { Link, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
@@ -57,8 +58,12 @@ export default function SignupScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.logo}>🔨</Text>
-          <Text style={styles.title}>Create Account</Text>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>Karigar Ustaad</Text>
           <Text style={styles.subtitle}>Join KarigarUstaad today</Text>
         </View>
 
@@ -123,9 +128,17 @@ const styles = StyleSheet.create({
     marginTop: 30,
     marginBottom: 40,
   },
-  logo: {
-    fontSize: 56,
-    marginBottom: 16,
+  logoImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 12,
+  },
+  appName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   title: {
     fontSize: 28,

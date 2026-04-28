@@ -87,8 +87,9 @@ export const getJobById = async (jobId: string): Promise<JobItem> => {
   console.log(`📋 JobService: Fetching job ${jobId}...`);
 
   try {
-    const response = await api.get<{ success: boolean; data: JobItem }>(`/jobs/${jobId}`);
-    const normalizedJob = normalizeJob(response.data.data);
+    const response = await api.get<{ success?: boolean; data?: JobItem; job?: JobItem }>(`/jobs/${jobId}`);
+    const payload = response.data.data || response.data.job || response.data;
+    const normalizedJob = normalizeJob(payload);
     console.log(`📋 JobService: Got job: ${normalizedJob.title}`);
     return normalizedJob;
   } catch (error) {

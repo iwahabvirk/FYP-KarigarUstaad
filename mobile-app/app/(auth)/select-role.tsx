@@ -31,7 +31,7 @@ export default function SelectRoleScreen() {
     router.push({
       pathname: '/(auth)/register',
       params: {
-        role: 'employer',
+        role: 'customer',
         name: params.name || '',
         email: params.email || '',
         password: params.password || '',

@@ -55,9 +55,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setToken(authToken);
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setToken(null);
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+    await AsyncStorage.removeItem(USER_DATA_KEY);
   };
 
   const updateUser = (userData: UserPayload) => {

@@ -11,7 +11,7 @@ const generateToken = (id) => {
 // Register User
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, skills, bio } = req.body;
 
     // Validate input
     if (!name || !email || !password || !role) {
@@ -36,6 +36,8 @@ exports.register = async (req, res) => {
       email,
       password,
       role,
+      skills: skills || [],
+      bio: bio || '',
     });
 
     // Generate token
@@ -50,6 +52,13 @@ exports.register = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        skills: user.skills,
+        bio: user.bio,
+        location: user.location,
+        phone: user.phone,
+        experience: user.experience,
+        isPremium: user.isPremium,
+        rating: user.rating,
       },
     });
   } catch (error) {
@@ -104,6 +113,13 @@ exports.login = async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        skills: user.skills,
+        bio: user.bio,
+        location: user.location,
+        phone: user.phone,
+        experience: user.experience,
+        isPremium: user.isPremium,
+        rating: user.rating,
       },
     });
   } catch (error) {
@@ -134,8 +150,11 @@ exports.getCurrentUser = async (req, res) => {
         email: user.email,
         role: user.role,
         skills: user.skills,
+        bio: user.bio,
         experience: user.experience,
         location: user.location,
+        phone: user.phone,
+        isPremium: user.isPremium,
         rating: user.rating,
         totalReviews: user.totalReviews,
         completedJobs: user.completedJobs,

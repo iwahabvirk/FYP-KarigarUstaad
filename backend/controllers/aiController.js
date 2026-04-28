@@ -178,3 +178,63 @@ exports.findMatchingWorkers = async (req, res) => {
     });
   }
 };
+
+// Generate improved job description
+exports.generateDescription = async (req, res) => {
+  try {
+    const { text } = req.body;
+
+    if (!text || text.trim().length < 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Text must be at least 5 characters',
+      });
+    }
+
+    // Simple template-based description generation
+    const templates = {
+      'plumbing': 'Need professional plumbing services for {text}. Looking for experienced plumber to handle repairs, installations, or maintenance work. Please ensure you have proper tools and certifications.',
+      'electrical': 'Require skilled electrician for {text}. Need someone qualified to handle electrical work safely and according to building codes. Experience with wiring, outlets, and electrical systems preferred.',
+      'painting': 'Looking for painter to handle {text}. Need quality work with attention to detail. Experience with different paint types and surface preparation required.',
+      'carpentry': 'Need carpenter for {text}. Looking for skilled woodworker to handle construction, repairs, or custom work. Tools and materials should be provided unless otherwise specified.',
+      'cleaning': 'Require cleaning services for {text}. Need thorough and reliable cleaning professional. Experience with various cleaning methods and equipment preferred.',
+      'other': 'Need assistance with {text}. Looking for skilled professional to handle this task. Please provide details about your experience and approach.',
+    };
+
+    // Determine category from text
+    const textLower = text.toLowerCase();
+    let category = 'other';
+    const categoryKeywords = {
+      'plumbing': ['plumb', 'pipe', 'drain', 'leak', 'tap', 'toilet', 'sink', 'faucet', 'water'],
+      'electrical': ['electric', 'wire', 'switch', 'outlet', 'bulb', 'light', 'panel', 'breaker', 'voltage'],
+      'painting': ['paint', 'wall', 'color', 'brush', 'coat', 'finish', 'surface', 'repaint'],
+      'carpentry': ['wood', 'door', 'cabinet', 'shelf', 'frame', 'furniture', 'carpen', 'build', 'construct'],
+      'cleaning': ['clean', 'dust', 'sweep', 'mop', 'wash', 'laundry', 'sanitize', 'tidy'],
+    };
+
+    for (const [cat, keywords] of Object.entries(categoryKeywords)) {
+      if (keywords.some(keyword => textLower.includes(keyword))) {
+        category = cat;
+        break;
+      }
+    }
+
+    const template = templates[category];
+    const improvedDescription = template.replace('{text}', text.trim());
+
+    res.status(200).json({
+      success: true,
+      data: {
+        originalText: text,
+        improvedDescription,
+        suggestedCategory: category,
+      },
+    });
+  } catch (error) {
+    console.error('❌ AIController: Error generating description', error.message);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};

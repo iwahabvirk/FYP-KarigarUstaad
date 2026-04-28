@@ -8,7 +8,7 @@ import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
 import { createJob } from '@/src/services/jobService';
 import { JOB_CATEGORIES } from '@/constants/jobCategories';
-import { suggestCategory } from '@/src/services/aiService';
+import { suggestCategory, generateJobDescription } from '@/src/services/aiService';
 
 export default function PostJobScreen() {
   const router = useRouter();
@@ -19,6 +19,7 @@ export default function PostJobScreen() {
   const [category, setCategory] = useState('');
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [descriptionLoading, setDescriptionLoading] = useState(false);
 
   const resetForm = () => {
     setTitle('');
@@ -44,6 +45,30 @@ export default function PostJobScreen() {
       Alert.alert('Error', 'Could not suggest category. Please select manually.');
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const handleImproveDescription = async () => {
+    if (!description.trim()) {
+      Alert.alert('Missing description', 'Please write a short description first.');
+      return;
+    }
+
+    try {
+      setDescriptionLoading(true);
+      const response = await generateJobDescription({ text: description });
+      const generatedText = response.data.data.improvedDescription;
+      const suggestedCategory = response.data.data.suggestedCategory;
+
+      setDescription(generatedText);
+      setCategory(suggestedCategory);
+
+      Alert.alert('Improved description generated', 'We updated your description and suggested a category.');
+    } catch (error: any) {
+      console.error('Error improving description:', error);
+      Alert.alert('Error', 'Could not improve the description right now. Please try again.');
+    } finally {
+      setDescriptionLoading(false);
     }
   };
 
@@ -174,6 +199,15 @@ export default function PostJobScreen() {
             multiline
             numberOfLines={5}
           />
+          <TouchableOpacity
+            onPress={handleImproveDescription}
+            disabled={descriptionLoading}
+            style={styles.improveButton}
+          >
+            <Text style={[styles.improveButtonText, descriptionLoading && styles.improveButtonTextDisabled]}>
+              {descriptionLoading ? 'Improving...' : '🤖 Improve Description'}
+            </Text>
+          </TouchableOpacity>
         </Card>
 
         <Card>
@@ -286,6 +320,22 @@ const styles = StyleSheet.create({
   },
   categoryButtonTextActive: {
     color: colors.white,
+  },
+  improveButton: {
+    marginTop: 12,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: colors.primary,
+  },
+  improveButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.white,
+  },
+  improveButtonTextDisabled: {
+    opacity: 0.6,
   },
   footer: {
     paddingHorizontal: 20,

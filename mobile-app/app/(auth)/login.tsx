@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
@@ -10,7 +10,7 @@ import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('test123');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { login } = useAuth();
@@ -54,8 +54,12 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.logo}>🔨</Text>
-          <Text style={styles.title}>KarigarUstaad</Text>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>Karigar Ustaad</Text>
           <Text style={styles.subtitle}>Find Trusted Workers</Text>
         </View>
 
@@ -114,9 +118,17 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 60,
   },
-  logo: {
-    fontSize: 64,
-    marginBottom: 16,
+  logoImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 12,
+  },
+  appName: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
   },
   title: {
     fontSize: 28,

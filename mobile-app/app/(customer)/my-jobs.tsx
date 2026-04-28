@@ -37,14 +37,14 @@ const getStatusBadge = (status: string) => {
   switch (status) {
     case 'pending':
       return { backgroundColor: '#FFF8E1', color: '#FF9800' };
-    case 'accepted':
-      return { backgroundColor: '#E8F5E9', color: '#388E3C' };
+      case 'accepted':
+      return { backgroundColor: '#DBEAFE', color: '#1D4ED8' };
     case 'in_progress':
-      return { backgroundColor: '#E3F2FD', color: '#1976D2' };
+      return { backgroundColor: '#FFF7ED', color: '#D97706' };
     case 'completed':
-      return { backgroundColor: '#F3E5F5', color: '#8E24AA' };
+      return { backgroundColor: '#DCFCE7', color: '#15803D' };
     case 'paid':
-      return { backgroundColor: '#E8F5E9', color: '#2E7D32' };
+      return { backgroundColor: '#DCFCE7', color: '#15803D' };
     default:
       return { backgroundColor: colors.grayLight, color: colors.text }; 
   }
@@ -166,8 +166,15 @@ export default function MyJobsScreen() {
         ) : (
           <FlatList
             data={jobs}
-            keyExtractor={(item) => item.id}
-            renderItem={renderJobCard}
+            keyExtractor={(item) => item.id || item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                onPress={() => router.push({ pathname: '/(customer)/job-details', params: { jobId: item.id || item._id } })}
+                activeOpacity={0.85}
+              >
+                {renderJobCard({ item })}
+              </TouchableOpacity>
+            )}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
           />

@@ -144,6 +144,14 @@ export default function CustomerHomeScreen() {
             <Text style={styles.quickButtonIcon}>➕</Text>
             <Text style={styles.quickButtonText}>Post Job</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.quickButton} onPress={() => router.push('/(customer)/my-jobs')}>
+            <Text style={styles.quickButtonIcon}>📂</Text>
+            <Text style={styles.quickButtonText}>My Jobs</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.quickButton} onPress={() => router.push('/(customer)/staff-booking')}>
+            <Text style={styles.quickButtonIcon}>🏢</Text>
+            <Text style={styles.quickButtonText}>In-House Staff</Text>
+          </TouchableOpacity>
         </View>
 
         {/* AI Recommendations */}

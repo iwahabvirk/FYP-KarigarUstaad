@@ -6,6 +6,7 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, useLocalSearchParams, useRouter } from 'expo-router';
@@ -15,7 +16,7 @@ import { Button } from '@/components/Button';
 import { registerUser } from '@/src/services/authService';
 
 type RegisterParams = {
-  role?: 'worker' | 'employer';
+  role?: 'worker' | 'customer';
   name?: string;
   email?: string;
   password?: string;
@@ -28,14 +29,22 @@ export default function RegisterScreen() {
   const [name, setName] = useState(params.name || '');
   const [email, setEmail] = useState(params.email || '');
   const [password, setPassword] = useState(params.password || '');
-  const [role, setRole] = useState<'worker' | 'employer'>(
-    params.role === 'employer' ? 'employer' : 'worker',
+  const [role, setRole] = useState<'worker' | 'customer'>(
+    params.role === 'customer' ? 'customer' : 'worker',
   );
+  const [skills, setSkills] = useState('');
+  const [bio, setBio] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
     if (!name || !email || !password || !role) {
       Alert.alert('Validation', 'Please complete all fields and choose a role.');
+      return;
+    }
+
+    // For workers, require skills
+    if (role === 'worker' && !skills.trim()) {
+      Alert.alert('Validation', 'Please enter your skills.');
       return;
     }
 
@@ -56,14 +65,23 @@ export default function RegisterScreen() {
       setLoading(true);
       console.log('📝 RegisterScreen: Creating account for', email, 'with role:', role);
       
-      const response = await registerUser({ name, email, password, role });
+      const registerData = {
+        name,
+        email,
+        password,
+        role,
+        skills: role === 'worker' ? skills.split(',').map(s => s.trim()) : [],
+        bio: bio.trim() || '',
+      };
+      
+      const response = await registerUser(registerData);
       console.log('✅ RegisterScreen: Registration successful');
       
       Alert.alert('Success', response.message || 'Account created successfully');
 
       // Navigate based on role
-      if (response.user.role === 'employer') {
-        router.replace('/(employer)/dashboard');
+      if (response.user.role === 'customer') {
+        router.replace('/(customer)/home');
       } else {
         router.replace('/(worker)/dashboard');
       }
@@ -79,8 +97,12 @@ export default function RegisterScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
-          <Text style={styles.logo}>🔨</Text>
-          <Text style={styles.title}>KarigarUstaad</Text>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
+          <Text style={styles.appName}>Karigar Ustaad</Text>
           <Text style={styles.subtitle}>Job Marketplace</Text>
         </View>
 
@@ -110,17 +132,17 @@ export default function RegisterScreen() {
             <TouchableOpacity
               style={[
                 styles.roleOption,
-                role === 'employer' && styles.roleOptionActive,
+                role === 'customer' && styles.roleOptionActive,
               ]}
-              onPress={() => setRole('employer')}
+              onPress={() => setRole('customer')}
             >
               <Text
                 style={[
                   styles.roleOptionText,
-                  role === 'employer' && styles.roleOptionTextActive,
+                  role === 'customer' && styles.roleOptionTextActive,
                 ]}
               >
-                💼 Employer
+                💼 Customer
               </Text>
             </TouchableOpacity>
           </View>
@@ -144,6 +166,24 @@ export default function RegisterScreen() {
             onChangeText={setPassword}
             secureTextEntry
           />
+
+          {role === 'worker' && (
+            <>
+              <Input
+                placeholder="Skills (comma separated, e.g., plumbing, electrical)"
+                value={skills}
+                onChangeText={setSkills}
+              />
+
+              <Input
+                placeholder="Bio (tell us about yourself)"
+                value={bio}
+                onChangeText={setBio}
+                multiline
+                numberOfLines={3}
+              />
+            </>
+          )}
 
           <Button
             label={loading ? 'Creating account...' : 'Create Account'}
@@ -180,11 +220,17 @@ const styles = StyleSheet.create({
     marginTop: 40,
     marginBottom: 40,
   },
-  logo: {
-    fontSize: 32,
+  logoImage: {
+    width: 80,
+    height: 80,
+    marginBottom: 12,
+  },
+  appName: {
+    fontSize: 22,
     fontWeight: '700',
-    color: colors.primary,
+    color: colors.text,
     marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 14,

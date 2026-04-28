@@ -72,7 +72,14 @@ exports.createJob = async (req, res) => {
       });
     }
 
-    console.log('💼 JobController: Creating job in database...');
+    console.log('💼 JobController: Creating job in database...', {
+      title,
+      customer: customerId,
+      employer: customerId,
+      category: normalizedCategory,
+      budget: parsedBudget,
+    });
+
     const job = await Job.create({
       title: title.trim(),
       description: description.trim(),
@@ -80,6 +87,7 @@ exports.createJob = async (req, res) => {
       location: location.trim(),
       category: normalizedCategory,
       requiredSkills: requiredSkills || [normalizedCategory],
+      customer: customerId,
       employer: customerId,
       status: 'pending',
     });
@@ -88,6 +96,7 @@ exports.createJob = async (req, res) => {
       jobId: job._id,
       title: job.title,
       budget: job.budget,
+      customer: job.customer,
     });
 
     res.status(201).json({
@@ -126,7 +135,9 @@ exports.getAllJobs = async (req, res) => {
     }
 
     const jobs = await Job.find(filter)
+      .populate('customer', 'name email phone')
       .populate('employer', 'name email rating')
+      .populate('assignedWorker', 'name')
       .sort('-createdAt');
 
     res.status(200).json({
@@ -145,9 +156,10 @@ exports.getAllJobs = async (req, res) => {
 // Get My Jobs (Employer)
 exports.getMyJobs = async (req, res) => {
   try {
-    const jobs = await Job.find({ employer: req.user.id })
+    const jobs = await Job.find({ customer: req.user.id })
       .sort('-createdAt')
-      .populate('employer', 'name email');
+      .populate('customer', 'name email phone')
+      .populate('assignedWorker', 'name');
 
     res.status(200).json({
       success: true,
@@ -167,7 +179,8 @@ exports.getWorkerJobs = async (req, res) => {
   try {
     const jobs = await Job.find({ assignedWorker: req.user.id })
       .sort('-createdAt')
-      .populate('employer', 'name email');
+      .populate('customer', 'name email phone')
+      .populate('assignedWorker', 'name');
 
     res.status(200).json({
       success: true,
@@ -189,7 +202,9 @@ exports.getJobById = async (req, res) => {
     if (!ensureValidJobId(jobId, res)) return;
     console.log('💼 JobController: getJobById called', { jobId });
 
-    const job = await Job.findById(jobId).populate('employer', 'name email rating');
+    const job = await Job.findById(jobId)
+      .populate('customer', 'name email phone')
+      .populate('assignedWorker', 'name');
 
     if (!job) {
       console.error('❌ JobController: Job not found', { jobId });
@@ -203,12 +218,11 @@ exports.getJobById = async (req, res) => {
       jobId: job._id,
       title: job.title,
       status: job.status,
+      customer: job.customer,
     });
+    console.log('JOB DATA:', JSON.stringify(job, null, 2));
 
-    res.status(200).json({
-      success: true,
-      data: job,
-    });
+    res.status(200).json(job);
   } catch (error) {
     console.error('❌ JobController: Error getting job', {
       jobId: req.params.id,
@@ -349,7 +363,7 @@ exports.updateJobStatus = async (req, res) => {
 
     const status = normalizeJobStatus(req.body.status);
 
-    if (!status || !['pending', 'accepted', 'in_progress', 'completed', 'paid'].includes(status)) {
+    if (!status || !['pending','accepted','in_progress','completed'].includes(status)) {
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid status',
@@ -365,24 +379,31 @@ exports.updateJobStatus = async (req, res) => {
       });
     }
 
-    if (job.employer.toString() !== req.user.id) {
+    // Allow employer/customer to update, or assigned worker to update status
+    const isEmployer = job.employer.toString() === req.user.id;
+    const isAssignedWorker = job.assignedWorker && job.assignedWorker.toString() === req.user.id;
+    
+    if (!isEmployer && !isAssignedWorker) {
       return res.status(403).json({
         success: false,
         message: 'Not authorized to update this job',
       });
     }
 
-    if (status === 'completed' && job.status !== 'completed') {
-      const application = await Application.findOne({
-        job: jobId,
-        status: 'accepted',
+    // Workers can only update to in_progress or completed
+    if (isAssignedWorker && !['in_progress', 'completed'].includes(status)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Workers can only update status to in_progress or completed',
       });
+    }
 
-      if (application) {
-        await User.findByIdAndUpdate(application.worker, {
-          $inc: { 'wallet.pending': job.budget },
-        });
-      }
+    // Employers can update to accepted, in_progress, completed
+    if (isEmployer && !['accepted', 'in_progress', 'completed'].includes(status)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Employers can only update status to accepted, in_progress, or completed',
+      });
     }
 
     job.status = status;

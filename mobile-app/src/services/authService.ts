@@ -24,7 +24,9 @@ export interface RegisterPayload {
   name: string;
   email: string;
   password: string;
-  role: 'worker' | 'employer' | 'customer';
+  role: 'worker' | 'customer';
+  skills?: string[];
+  bio?: string;
 }
 
 const AUTH_TOKEN_KEY = 'karigarAuthToken';

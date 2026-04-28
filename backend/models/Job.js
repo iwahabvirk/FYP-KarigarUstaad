@@ -25,11 +25,15 @@ const jobSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['plumbing','electrical','painting','cleaning','carpentry'],
+      enum: ['plumbing','electrical','painting','cleaning','carpentry','other'],
       required: [true, 'Please provide a category'],
-      default: 'plumbing',
       lowercase: true,
       trim: true,
+    },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
     employer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -43,8 +47,22 @@ const jobSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['pending', 'accepted', 'in_progress', 'arrived', 'completed', 'paid', 'cancelled'],
+      enum: ['pending','accepted','in_progress','completed'],
       default: 'pending',
+    },
+    type: {
+      type: String,
+      enum: ['marketplace','direct'],
+      default: 'marketplace',
+    },
+    workerType: {
+      type: String,
+      enum: ['independent','inhouse'],
+      default: 'independent',
+    },
+    isFeatured: {
+      type: Boolean,
+      default: false,
     },
     requiredSkills: [
       {
@@ -62,7 +80,6 @@ const jobSchema = new mongoose.Schema(
       virtuals: true,
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
         delete ret.__v;
       },
     },

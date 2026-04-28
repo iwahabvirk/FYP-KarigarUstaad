@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Job = require('./models/Job');
 const Service = require('./models/Service');
+const InHouseStaff = require('./models/InHouseStaff');
 const bcrypt = require('bcryptjs');
 
 require('dotenv').config();
@@ -145,7 +146,7 @@ const seedServices = async () => {
       title: 'Appliance Installation',
       description: 'Installation of electrical appliances including AC, fans, and lighting.',
       price: 1500,
-      category: 'Installation',
+      category: 'other',
       worker: users.find(u => u.email === 'ahmed@gmail.com')._id,
       isActive: true,
     },
@@ -171,6 +172,68 @@ const seedServices = async () => {
   await Service.deleteMany({});
   await Service.insertMany(services);
   console.log('✅ Services seeded successfully');
+};
+
+// Seed in-house staff
+const seedInHouseStaff = async () => {
+  console.log('🌱 Seeding in-house staff...');
+
+  const staff = [
+    {
+      name: 'Muhammad Asif',
+      skills: ['pipe repair', 'leak fixing', 'drain cleaning'],
+      category: 'plumbing',
+      hourlyRate: 1500,
+      rating: 4.5,
+      location: 'Lahore',
+      phone: '+92-300-1111111',
+      availability: true,
+    },
+    {
+      name: 'Ahmed Electrical',
+      skills: ['wiring', 'outlet installation', 'panel repair'],
+      category: 'electrical',
+      hourlyRate: 1800,
+      rating: 4.7,
+      location: 'Karachi',
+      phone: '+92-300-2222222',
+      availability: true,
+    },
+    {
+      name: 'Fatima Painter',
+      skills: ['interior painting', 'wall preparation', 'color matching'],
+      category: 'painting',
+      hourlyRate: 1200,
+      rating: 4.3,
+      location: 'Islamabad',
+      phone: '+92-300-3333333',
+      availability: true,
+    },
+    {
+      name: 'Hassan Carpenter',
+      skills: ['furniture repair', 'door installation', 'cabinet making'],
+      category: 'carpentry',
+      hourlyRate: 2000,
+      rating: 4.6,
+      location: 'Lahore',
+      phone: '+92-300-4444444',
+      availability: true,
+    },
+    {
+      name: 'Ayesha Cleaning',
+      skills: ['deep cleaning', 'carpet cleaning', 'window cleaning'],
+      category: 'cleaning',
+      hourlyRate: 800,
+      rating: 4.4,
+      location: 'Karachi',
+      phone: '+92-300-5555555',
+      availability: true,
+    },
+  ];
+
+  await InHouseStaff.deleteMany({});
+  await InHouseStaff.insertMany(staff);
+  console.log('✅ In-house staff seeded successfully');
 };
 
 // Seed jobs
@@ -226,6 +289,7 @@ const seedDatabase = async () => {
     await connectDB();
     await seedUsers();
     await seedServices();
+    await seedInHouseStaff();
     await seedJobs();
     console.log('🎉 Database seeded successfully!');
     process.exit(0);

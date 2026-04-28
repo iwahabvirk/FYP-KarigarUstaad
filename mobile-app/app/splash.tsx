@@ -3,9 +3,11 @@ import { View, Text, StyleSheet, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { colors } from '@/constants/colors';
+import { useAuth } from '@/src/contexts/AuthContext';
 
 export default function SplashScreen() {
   const router = useRouter();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -16,13 +18,28 @@ export default function SplashScreen() {
       useNativeDriver: true,
     }).start();
 
-    // Navigate after 2.5 seconds
+    // Check auth and navigate after animation
     const timer = setTimeout(() => {
-      router.replace('/onboarding');
+      if (!isLoading) {
+        if (isAuthenticated && user) {
+          // Navigate based on user role
+          if (user.role === 'worker') {
+            router.replace('/(worker)/dashboard');
+          } else if (user.role === 'customer') {
+            router.replace('/(customer)/home');
+          } else {
+            // Fallback to signin
+            router.replace('/(auth)/login');
+          }
+        } else {
+          // No auth, go to onboarding/signin
+          router.replace('/onboarding');
+        }
+      }
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [router, isAuthenticated, user, isLoading]);
 
   return (
     <SafeAreaView style={styles.container}>

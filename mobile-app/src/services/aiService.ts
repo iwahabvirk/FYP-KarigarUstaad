@@ -13,3 +13,21 @@ export const suggestCategory = async (description: string): Promise<string> => {
   console.log('✅ AIService: Category suggested:', response.data.category);
   return response.data.category;
 };
+
+export interface GenerateDescriptionPayload {
+  text: string;
+}
+
+export interface GenerateDescriptionResponse {
+  success: boolean;
+  data: {
+    originalText: string;
+    improvedDescription: string;
+    suggestedCategory: string;
+  };
+}
+
+export const generateJobDescription = async (payload: GenerateDescriptionPayload): Promise<GenerateDescriptionResponse> => {
+  const response = await api.post<GenerateDescriptionResponse>('/ai/generate-description', payload);
+  return response.data;
+};

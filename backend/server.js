@@ -15,6 +15,7 @@ const walletRoutes = require('./routes/walletRoutes');
 const userRoutes = require('./routes/userRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
 const aiRoutes = require('./routes/aiRoutes');
+const inHouseStaffRoutes = require('./routes/inHouseStaffRoutes');
 
 // Initialize Express app
 const app = express();
@@ -73,6 +74,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/wallet', walletRoutes);
 app.use('/api/services', serviceRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/staff', inHouseStaffRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

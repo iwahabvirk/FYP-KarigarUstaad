@@ -21,9 +21,8 @@ const serviceSchema = new mongoose.Schema(
     },
     category: {
       type: String,
-      enum: ['plumbing','electrical','painting','cleaning','carpentry'],
+      enum: ['plumbing','electrical','painting','cleaning','carpentry','other'],
       required: [true, 'Please provide a category'],
-      default: 'plumbing',
       lowercase: true,
       trim: true,
     },

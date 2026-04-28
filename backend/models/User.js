@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['worker', 'employer', 'customer'],
+      enum: ['worker', 'customer'],
       required: [true, 'Please select a role'],
     },
     phone: {
@@ -79,15 +79,7 @@ const userSchema = new mongoose.Schema(
         default: 0,
       },
     },
-    totalReviews: {
-      type: Number,
-      default: 0,
-    },
     // Worker specific fields
-    completedJobs: {
-      type: Number,
-      default: 0,
-    },
     responseTime: {
       type: String,
       default: '24 hours',
@@ -96,20 +88,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
-    wallet: {
-      balance: {
-        type: Number,
-        default: 0,
-      },
-      pending: {
-        type: Number,
-        default: 0,
-      },
-    },
     // Customer specific fields
     totalJobsPosted: {
       type: Number,
       default: 0,
+    },
+    // Monetization
+    isPremium: {
+      type: Boolean,
+      default: false,
     },
   },
   {
